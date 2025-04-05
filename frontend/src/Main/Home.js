@@ -17,51 +17,39 @@ export default function Home() {
 
   return (
     <>
+     
       <Navbar
-        bg="dark"
-        variant="dark"
-        expand="lg"
-        style={{ padding: "10px 20px" }}
-      >
-        <Container
-          fluid
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Navbar.Brand
-            href="/"
-            style={{
-              marginRight: "20px",
-              fontSize: "24px",
-              marginLeft: "20px",
-            }}
-          >
-            SkillHub
-          </Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ml-auto" style={{ marginRight: "20px" }}>
-              <Nav.Link
-                href="/login"
-                className="text-light"
-                style={{ marginLeft: "1200px" }}
-              >
-                Login
-              </Nav.Link>
-              <Nav.Link
-                href="/signup"
-                className="text-light"
-                style={{ marginLeft: "10px" }}
-              >
-                Signup
-              </Nav.Link>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+  bg="dark"
+  variant="dark"
+  expand="lg"
+  style={{ padding: "10px 20px" }}
+>
+  <Container fluid>
+    <Navbar.Brand
+      href="/"
+      style={{
+        fontSize: "24px",
+        marginLeft: "20px",
+      }}
+    >
+      SkillHub
+    </Navbar.Brand>
+
+    <Navbar.Toggle aria-controls="basic-navbar-nav" />
+
+    <Navbar.Collapse id="basic-navbar-nav">
+      <Nav className="ms-auto" style={{ marginRight: "20px" }}>
+        <Nav.Link href="/login" className="text-light">
+          Login
+        </Nav.Link>
+        <Nav.Link href="/signup" className="text-light">
+          Signup
+        </Nav.Link>
+      </Nav>
+    </Navbar.Collapse>
+  </Container>
+</Navbar>
+
 
       <div className="home-container position-relative">
         <div className="particles-container">

@@ -6,8 +6,10 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "./firebase";
 import { v4 } from "uuid";
 import ReactPlayer from 'react-player';
+import { useNavigate } from 'react-router-dom';
 
 const GetAllCoursesByInstructorId = () => {
+    const navigate = useNavigate();  // Initialisation de useNavigate
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -91,8 +93,22 @@ const GetAllCoursesByInstructorId = () => {
         }
     };
 
+    // Fonction pour rediriger vers la page "Ajouter un Cours"
+    const handleAddCourseClick = () => {
+        navigate('/add-course');  // Remplace history.push par navigate
+    };
+
     return (
         <div style={{ padding: '20px' }}>
+            {/* Bouton Ajouter un Cours */}
+            <Button
+                type="primary"
+                onClick={handleAddCourseClick}
+                style={{ marginBottom: '20px' }}
+            >
+                Ajouter un Cours
+            </Button>
+
             <h1 style={{ marginBottom: '20px', fontSize: '24px' }}>All Courses</h1>
             {loading ? (
                 <div style={{ textAlign: 'center' }}>
@@ -106,7 +122,10 @@ const GetAllCoursesByInstructorId = () => {
                         <Card
                             key={course._id}
                             title={course.title}
-                            style={{ width: 300, margin: '10px', backgroundColor:
+                            style={{
+                                width: 300,
+                                margin: '10px',
+                                backgroundColor:
                                     course.status === 'pending' ? 'orange' :
                                         course.status === 'rejected' ? 'red' :
                                             course.status === 'accepted' ? 'green' : 'white',
@@ -140,7 +159,11 @@ const GetAllCoursesByInstructorId = () => {
                     <div style={{ overflowY: 'auto' }}>
                         <Card
                             title={course.title}
-                            style={{ width: '100%', borderRadius: '10px', boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)' }} // Added border radius and shadow to card
+                            style={{
+                                width: '100%',
+                                borderRadius: '10px',
+                                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'
+                            }}
                         >
                             <p><strong>Description:</strong> {course.description}</p>
                             <p><strong>Requirements:</strong> {course.requirements}</p>
@@ -155,22 +178,20 @@ const GetAllCoursesByInstructorId = () => {
                                     {contentItem.doc_type !== 'video' && (
                                         <p><strong>File:</strong> <a href={contentItem.url}>{contentItem.url}</a></p>
                                     )}
-                                    <hr/>
+                                    <hr />
                                 </div>
                             ))}
                             <h2>Add New Content</h2>
                             <Form name="addContentForm" form={form} onFinish={onFinish}>
                                 <Form.Item
                                     name="title"
-                                    rules={[{required: true, message: 'Please enter the title of the content!'}]}
-                                >
-                                    <Input placeholder="Content Title"/>
+                                    rules={[{ required: true, message: 'Please enter the title of the content!' }]}>
+                                    <Input placeholder="Content Title" />
                                 </Form.Item>
                                 <Form.Item
                                     name="doc_type"
                                     label="Content Type"
-                                    rules={[{required: true, message: 'Please select the content type!'}]}
-                                >
+                                    rules={[{ required: true, message: 'Please select the content type!' }]}>
                                     <Radio.Group>
                                         <Radio.Button value="video">Video</Radio.Button>
                                         <Radio.Button value="file">File</Radio.Button>
@@ -180,8 +201,7 @@ const GetAllCoursesByInstructorId = () => {
                                     name="file"
                                     valuePropName="fileList"
                                     getValueFromEvent={(e) => e.fileList}
-                                    rules={[{required: true, message: 'Please upload a file!'}]}
-                                >
+                                    rules={[{ required: true, message: 'Please upload a file!' }]}>
                                     <Upload
                                         name="file"
                                         maxCount={1}
@@ -191,11 +211,11 @@ const GetAllCoursesByInstructorId = () => {
                                             return false;
                                         }}
                                     >
-                                        <Button icon={<UploadOutlined/>}>Select File</Button>
+                                        <Button icon={<UploadOutlined />}>Select File</Button>
                                     </Upload>
                                 </Form.Item>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" loading={loading} >Add Content</Button>
+                                    <Button type="primary" htmlType="submit" loading={loading}>Add Content</Button>
                                 </Form.Item>
                             </Form>
                         </Card>

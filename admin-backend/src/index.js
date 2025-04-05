@@ -1,3 +1,4 @@
+//code cluster :9qvhieCi9Pzg4voU
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -22,7 +23,7 @@ app.use(cookieParser());
 const db = process.env.MONGODB_URI;
 
 mongoose
-    .connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
+    .connect(db)
     .then(() => console.log('MongoDB successfully connected'))
     .catch(err => console.log(err));
 

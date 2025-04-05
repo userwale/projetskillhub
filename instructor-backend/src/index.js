@@ -22,7 +22,7 @@ app.use(cookieParser());
 const db = process.env.MONGODB_URI;
 
 mongoose
-    .connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
+    .connect(db)
     .then(() => console.log('MongoDB successfully connected'))
     .catch(err => console.log(err));
 
