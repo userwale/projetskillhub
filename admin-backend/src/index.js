@@ -20,7 +20,9 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(cookieParser());
 
+
 const db = process.env.MONGODB_URI;
+console.log("Mongo URI:", db);
 
 mongoose
     .connect(db)

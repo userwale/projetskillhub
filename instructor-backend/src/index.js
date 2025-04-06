@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const instructor = require('./routes/instructorRoutes');
 
+require('dotenv').config();
+
 const app = express();
 require('dotenv').config();
 const cors = require('cors');
@@ -20,6 +22,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 const db = process.env.MONGODB_URI;
+console.log("Mongo URI:", db); // pour debug
 
 mongoose
     .connect(db)

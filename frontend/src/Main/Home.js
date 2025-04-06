@@ -145,9 +145,9 @@ export default function Home() {
                   learning schedules, and multimedia resources, you can upskill
                   or explore new interests seamlessly. Enroll in multiple
                   courses, track your progress, and receive timely updates. Our
-                  dedicated instructors and secure payment gateways ensure a
-                  smooth and rewarding learning experience. Join our vibrant
-                  community and unlock your potential today.
+                  dedicated instructors ensure a smooth and rewarding learning
+                  experience. 
+                  Join our vibrant community and unlock your potential today.
                 </p>
               </div>
             </Col>
