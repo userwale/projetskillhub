@@ -53,6 +53,93 @@ exports.loginInstructor = async (req, res) => {
     }
 };
 
+exports.getAllInstructors = async (req, res) => {
+    try {
+        const instructors = await Instructor.find();  // Recherche tous les instructeurs dans la base de données
+        res.status(200).json(instructors);  // Renvoie les instructeurs trouvés
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+exports.deleteInstructor = async (req, res) => {
+    try {
+        const { instructorId } = req.params;
+        const instructor = await Instructor.findByIdAndDelete(instructorId);
+        if (!instructor) {
+            return res.status(404).json({ message: 'Instructor not found' });
+        }
+        res.status(200).json({ message: 'Instructor deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+exports.createInstructor = async (req, res) => {
+    try {
+        const existingInstructor = await Instructor.findOne({ email: req.body.email });
+        if (existingInstructor) {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+
+        const hashedPassword = await bcrypt.hash(req.body.password, 10); 
+
+        const newInstructor = new Instructor({
+            name: req.body.name,
+            email: req.body.email,
+            password: hashedPassword,
+            title: req.body.title
+        });
+
+        await newInstructor.save();
+
+        res.status(201).json({ message: 'Instructor created successfully', instructorId: newInstructor._id });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+exports.viewInstructorProfile = async (req, res) => {
+    try {
+        const instructorId = req.params.instructorId;
+        const instructor = await Instructor.findById(instructorId);
+
+        if (!instructor) {
+            return res.status(404).json({ message: 'Instructor not found' });
+        }
+
+        console.log('Fetched profile:', instructor);
+
+        const { password, ...instructorData } = instructor.toObject();
+
+        res.status(200).json(instructorData);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+exports.updateInstructorProfile = async (req, res) => {
+    try {
+        const instructorId = req.params.instructorId;
+        const updatedProfile = req.body;
+
+        const instructor = await Instructor.findByIdAndUpdate(instructorId, updatedProfile, { new: true });
+
+        if (!instructor) {
+            return res.status(404).json({ message: 'Instructor not found' });
+        }
+
+        const { password, ...updatedData } = instructor.toObject();
+
+        res.status(200).json(updatedData);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
 
 exports.addNewCourse = async (req, res) => {
     try {
@@ -157,41 +244,18 @@ exports.addCourseContent = async (req, res) => {
 };
 
 
-
-exports.viewInstructorProfile = async (req, res) => {
+exports.deleteCourse = async (req, res) => {
     try {
-        const instructorId = req.params.instructorId;
-        const instructor = await Instructor.findById(instructorId);
+        const { courseId } = req.params;
+        
+        // Trouver et supprimer le cours dans la base de données
+        const deletedCourse = await Course.findByIdAndDelete(courseId);
 
-        if (!instructor) {
-            return res.status(404).json({ message: 'Instructor not found' });
+        if (!deletedCourse) {
+            return res.status(404).json({ message: 'Course not found' });
         }
 
-        console.log('Fetched profile:', instructor);
-
-        const { password, ...instructorData } = instructor.toObject();
-
-        res.status(200).json(instructorData);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-
-exports.updateInstructorProfile = async (req, res) => {
-    try {
-        const instructorId = req.params.instructorId;
-        const updatedProfile = req.body;
-
-        const instructor = await Instructor.findByIdAndUpdate(instructorId, updatedProfile, { new: true });
-
-        if (!instructor) {
-            return res.status(404).json({ message: 'Instructor not found' });
-        }
-
-        const { password, ...updatedData } = instructor.toObject();
-
-        res.status(200).json(updatedData);
+        res.status(200).json({ message: 'Course deleted successfully' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal Server Error' });

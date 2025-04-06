@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const admin = require('./routes/adminRoutes');
+const admin = require('../src/routes/adminRoutes');
 
 const app = express();
 require('dotenv').config();

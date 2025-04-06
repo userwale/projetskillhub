@@ -1,10 +1,11 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); 
 const Schema = mongoose.Schema;
 
 const CourseSchema = new Schema({
     title: {
         type: String,
         required: true,
+        trim: true,  // Trim to avoid extra spaces
     },
     description: {
         type: String,
@@ -13,19 +14,19 @@ const CourseSchema = new Schema({
     requirements: {
         type: String
     },
-    price: {
-        type: Number
-    },
     content: [{
         title: String,
         doc_type: String,
-        url: String,
+        url: {
+            type: String,
+            match: [/^https?:\/\/.+$/, 'Invalid URL format']  // URL validation regex
+        },
         completed: {
             type: Boolean,
             default: false
         }
     }],
-    instructor : {
+    instructor: {
         type: Schema.Types.ObjectId,
         ref: 'Instructor'
     },

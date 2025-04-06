@@ -130,6 +130,18 @@ exports.updateCourseStatus = async (req, res) => {
     }
 };
 
+exports.deleteCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        await axios.delete(`http://localhost:8072/api/instructor/course/${courseId}`);
+        res.status(200).json({ message: 'Course deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error deleting course' });
+    }
+};
+
+
 exports.deleteLearner = async (req, res) => {
     try {
         const { learnerId } = req.params;
@@ -145,3 +157,46 @@ exports.deleteLearner = async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+exports.getAllInstructors = async (req, res) => {
+    try {
+        const response = await axios.get(`http://localhost:8072/api/instructor/all`);
+        res.status(200).json(response.data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching instructors' });
+    }
+};
+
+exports.createInstructor = async (req, res) => {
+    try {
+        const response = await axios.post(`http://localhost:8072/api/instructor/signup`, req.body);
+        res.status(201).json(response.data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error creating instructor' });
+    }
+};
+
+exports.getInstructorById = async (req, res) => {
+    try {
+        const { instructorId } = req.params;
+        const response = await axios.get(`http://localhost:8072/api/instructor/${instructorId}/profile`);
+        res.status(200).json(response.data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching instructor' });
+    }
+};
+
+exports.deleteInstructor = async (req, res) => {
+    try {
+        const { instructorId } = req.params;
+        await axios.delete(`http://localhost:8072/api/instructor/${instructorId}`);
+        res.status(200).json({ message: 'Instructor deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error deleting instructor' });
+    }
+};
+
