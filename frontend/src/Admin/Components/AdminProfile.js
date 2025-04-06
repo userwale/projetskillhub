@@ -34,8 +34,14 @@ const AdminProfile = () => {
         fetchAdminProfile();
     }, []);
 
-    const handleUpdateProfile = async (formData) => {
+    const handleUpdateProfile = async (event) => {
+        event.preventDefault(); // Empêche le rechargement de la page lors de la soumission du formulaire
         setLoading(true);
+        const formData = {
+            name: adminData.name,
+            email: adminData.email
+        };
+
         try {
             const response = await fetch('http://localhost:8071/api/admin/profile', {
                 method: 'PUT',
@@ -47,7 +53,7 @@ const AdminProfile = () => {
             });
             const data = await response.json();
             if (response.ok) {
-                setAdminData(data);
+                setAdminData(data); // Mettez à jour les données du profil après la modification
                 setSuccessMessage('Profile updated successfully');
             } else {
                 setError(data.message || 'Failed to update profile');
@@ -59,6 +65,15 @@ const AdminProfile = () => {
         setLoading(false);
     };
 
+    // Gérer les changements dans les champs du formulaire
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+        setAdminData((prevData) => ({
+            ...prevData,
+            [name]: value
+        }));
+    };
+
     return (
         <div className="container">
             <h2 className="mt-4 mb-4">Admin Profile</h2>
@@ -67,11 +82,23 @@ const AdminProfile = () => {
             <Form onSubmit={handleUpdateProfile}>
                 <Form.Group controlId="formName">
                     <Form.Label>Name</Form.Label>
-                    <Form.Control type="text" placeholder="Enter name" value={adminData.name || ''} readOnly />
+                    <Form.Control
+                        type="text"
+                        placeholder="Enter name"
+                        name="name"
+                        value={adminData.name || ''}
+                        onChange={handleChange} // Met à jour l'état avec les nouvelles valeurs
+                    />
                 </Form.Group>
                 <Form.Group controlId="formEmail">
                     <Form.Label>Email address</Form.Label>
-                    <Form.Control type="email" placeholder="Enter email" value={adminData.email || ''} readOnly />
+                    <Form.Control
+                        type="email"
+                        placeholder="Enter email"
+                        name="email"
+                        value={adminData.email || ''}
+                        onChange={handleChange} // Met à jour l'état avec les nouvelles valeurs
+                    />
                 </Form.Group>
                 <Button className="mt-3" variant="primary" type="submit" disabled={loading}>
                     {loading ? 'Updating...' : 'Update Profile'}
