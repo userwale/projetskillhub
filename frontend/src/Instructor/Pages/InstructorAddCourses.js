@@ -37,7 +37,7 @@ const AddCourse = () => {
             };
 
             // Appel API pour ajouter un cours
-            const response = await axios.post('http://localhost:8072/api/instructor/course', data, {
+            const response = await axios.post('http://localhost:8072/api/instructor/courses', data, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }

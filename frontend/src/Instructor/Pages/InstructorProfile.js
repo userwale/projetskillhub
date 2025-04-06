@@ -88,7 +88,7 @@ const InstructorProfile = () => {
                     </Form.Item>
 
                     <Form.Item label="Email" name="email">
-                        <Input disabled value={profile.email} /> {/* Use Input from antd */}
+                        <Input value={profile.email} /> {/* Use Input from antd */}
                     </Form.Item>
 
                     <Form.Item label="Title" name="title">

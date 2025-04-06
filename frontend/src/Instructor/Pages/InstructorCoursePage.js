@@ -13,7 +13,7 @@ const InstructorCoursePage = () => {
 
     const fetchCourseDetails = async () => {
         try {
-            const response = await axios.get(`http://localhost:8072/api/instructor/course/${courseId}`);
+            const response = await axios.get(`http://localhost:8072/api/instructor/courses/${courseId}`);
             setCourse(response.data);
             setLoading(false);
         } catch (error) {
@@ -34,7 +34,7 @@ const InstructorCoursePage = () => {
             formData.append('title', values.title);
             formData.append('file', values.file[0]);
 
-            const response = await axios.post(`http://localhost:8072/api/instructor/course/${courseId}/content`, formData, {
+            const response = await axios.post(`http://localhost:8072/api/instructor/courses/${courseId}/content`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -65,7 +65,6 @@ const InstructorCoursePage = () => {
                     >
                         <p><strong>Description:</strong> {course.description}</p>
                         <p><strong>Requirements:</strong> {course.requirements}</p>
-                        <p><strong>Price:</strong> {course.price}</p>
                         <h2>Course Content</h2>
                         {course.content.map((contentItem, index) => (
                             <div key={index}>

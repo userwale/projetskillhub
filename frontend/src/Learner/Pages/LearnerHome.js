@@ -14,7 +14,6 @@ import { useNavigate } from "react-router-dom";
 import LearnerProfile from "../Components/LearnerProfile";
 import LearnerMyCourses from "../Components/LearnerMyCourses";
 import LearnerAllCourses from "../Components/LearnerAllCourses";
-import LearnerCart from "../Components/LearnerCart";
 import LearnerTickets from "../Components/LearnerTicket";
 const { Header, Sider, Content } = Layout;
 
@@ -54,9 +53,6 @@ const LearnerHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
         </Menu.Item>
         <hr style={{ marginTop: "30px", color: "white" }} />
 
-        <Menu.Item key="4" icon={<ShoppingCartOutlined />}>
-          Cart
-        </Menu.Item>
 
         <Menu.Item key="5" icon={<BookOutlined />}>
           My Tickets
@@ -132,8 +128,7 @@ const App = () => {
           {selectedMenuItem === "1" && <LearnerAllCourses />}
           {selectedMenuItem === "2" && <LearnerMyCourses />}
           {selectedMenuItem === "3" && <LearnerProfile />}
-          {selectedMenuItem === "4" && <LearnerCart />}
-          {selectedMenuItem === "5" && <LearnerTickets />}
+          {selectedMenuItem === "4" && <LearnerTickets />}
         </Content>
       </Layout>
     </Layout>

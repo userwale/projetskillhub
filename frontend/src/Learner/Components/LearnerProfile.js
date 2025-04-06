@@ -101,7 +101,7 @@ const LearnerProfile = () => {
               { type: "email", message: "Please enter a valid email address!" },
             ]}
           >
-            <Input style={{ borderRadius: "4px" }} disabled />
+            <Input style={{ borderRadius: "4px" }} />
           </Form.Item>
           <Form.Item
             label={<span style={{ fontWeight: "bold" }}>Description</span>}

@@ -14,11 +14,11 @@ router.put('/:instructorId/profile', auth.authenticate, instructorController.upd
 // ---------- COURSES ----------
 router.post('/courses', auth.authenticate, instructorController.addNewCourse);
 router.get('/:instructorId/courses', instructorController.getAllCoursesByInstructorId);
-router.get('/course/:courseId', instructorController.getCourseById);
+router.get('/courses/:courseId', instructorController.getCourseById);
 router.get('/courses', instructorController.getAllCourses);
-router.post('/course/:courseId/content', instructorController.addCourseContent);
-router.put('/course/:courseId/status', instructorController.updateCourseStatus);
-router.delete('/course/:courseId', instructorController.deleteCourse);
+router.post('/courses/:courseId/content', instructorController.addCourseContent);
+router.put('/courses/:courseId/status', instructorController.updateCourseStatus);
+router.delete('/courses/:courseId', instructorController.deleteCourse);
 
 // ---------- INSTRUCTORS ----------
 router.get('/all', instructorController.getAllInstructors);

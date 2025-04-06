@@ -38,7 +38,6 @@ const AddNewCourse = () => {
             formData.append('title', values.title);
             formData.append('description', values.description);
             formData.append('requirements', values.requirements);
-            formData.append('price', values.price);
 
             contentFields.forEach((field, index) => {
                 field.files.forEach((file) => {
@@ -107,22 +106,6 @@ const AddNewCourse = () => {
                                 name="requirements"
                             >
                                 <Input.TextArea />
-                            </Form.Item>
-
-                            <Form.Item
-                                label="Price"
-                                name="price"
-                                rules={[
-                                    { required: true, message: 'Please input the price of the course!' },
-                                    { validator: (_, value) => {
-                                            if (!isNaN(value) && parseFloat(value) >= 0) {
-                                                return Promise.resolve();
-                                            }
-                                            return Promise.reject('Please input a valid price!');
-                                        }}
-                                ]}
-                            >
-                                <Input />
                             </Form.Item>
 
                             {contentFields.map((content, index) => (
