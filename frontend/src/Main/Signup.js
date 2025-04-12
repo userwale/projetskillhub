@@ -46,9 +46,6 @@ export default function Signup() {
               <Tab eventKey="instructor" title="Instructor">
                 <InstructorSignup />
               </Tab>
-              <Tab eventKey="admin" title="Admin">
-                <AdminSignup />
-              </Tab>
             </Tabs>
             <p className="mt-3">
               Already have an account?{" "}
