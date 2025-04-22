@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const Admin = require('../models/adminModel');
 
+
 dotenv.config();
 
 // Method to verify activation key
@@ -288,39 +289,57 @@ exports.viewAdminProfile = async (req, res) => {
     }
 };
 
+
 exports.updateAdminProfile = async (req, res) => {
     try {
-        const updates = {};
-        if (req.body.name) updates.name = req.body.name;
+        const adminId = req.user.id;
+        const { name, email } = req.body;
+        let updatedData = { name, email };
 
-        // Disallow changing email or role via this route
-        const updatedAdmin = await Admin.findByIdAndUpdate(
-            req.user.id,
-            updates,
-            { new: true, runValidators: true }
-        ).select('-password');
-
-        if (!updatedAdmin) {
-            return res.status(404).json({
-                success: false,
-                message: 'Admin not found'
-            });
-        }
+        // Mettre à jour les infos dans la base de données
+        const updatedAdmin = await Admin.findByIdAndUpdate(adminId, updatedData, { new: true });
 
         res.status(200).json({
             success: true,
             message: 'Profile updated successfully',
-            data: updatedAdmin
+            data: {
+                name: updatedAdmin.name,
+                email: updatedAdmin.email,
+                profilePhoto: updatedAdmin.profilePhoto,  // Retourner la photo si nécessaire
+            }
         });
     } catch (error) {
         console.error('Error updating admin profile:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to update profile',
-            error: error.message
-        });
+        res.status(500).json({ message: 'Server error while updating profile' });
     }
 };
+
+exports.changeAdminPassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const admin = await Admin.findById(req.user.id);
+
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        // Vérification du mot de passe actuel
+        const isMatch = await bcrypt.compare(currentPassword, admin.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+
+        // Mise à jour du mot de passe
+        admin.password = await bcrypt.hash(newPassword, 10);
+        await admin.save();
+
+        res.status(200).json({ message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Error changing password:', error);
+        res.status(500).json({ message: 'Failed to change password' });
+    }
+};
+
 
 exports.updateLearner = async (req, res) => {
     const { learnerId } = req.params;
