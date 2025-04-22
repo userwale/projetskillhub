@@ -6,10 +6,11 @@ import {
     UserOutlined,
     LogoutOutlined,
     BookOutlined,
+    BellOutlined, // Ajout de l'icône BellOutlined pour notifications
 } from '@ant-design/icons';
 import InstructorAllCourses from "./InstructorAllCourses";
 import InstructorProfile from "./InstructorProfile";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const { Header, Sider, Content } = Layout;
 
@@ -28,7 +29,7 @@ const InstructorHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
             trigger={null}
             collapsible
             collapsed={collapsed}
-            style={{ left: 0 }}
+            style={{ left: 0, background: '#334155' }} // Gris plus clair
             className="custom-sider"
         >
             <div className="demo-logo-vertical" />
@@ -37,15 +38,17 @@ const InstructorHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
                 mode="inline"
                 defaultSelectedKeys={['1']}
                 onSelect={onSelectMenuItem}
+                style={{ background: '#334155', color: 'white' }}
             >
-                <Menu.Item key="1" icon={<BookOutlined />}>
+                <Menu.Item key="1" icon={<BookOutlined style={{ color: "white" }} />} >
                     All Courses
                 </Menu.Item>
-                <Menu.Item key="2" icon={<UserOutlined />}>
+                <Menu.Item key="2" icon={<UserOutlined style={{ color: "white" }} />} >
                     Profile
                 </Menu.Item>
-                <hr style={{marginTop:'30px', color:'white'}} />
-                <Menu.Item key="3" style={{marginTop:'30px'}} icon={<LogoutOutlined style={{color:"orangered"}} />} onClick={handleLogout}>
+                {/* Ligne de séparation avec couleur blanche */}
+                <hr style={{ marginTop: '30px', borderColor: '#FFFFFF', borderWidth: '1px', opacity: 0.5 }} />
+                <Menu.Item key="3" style={{ marginTop: '30px' }} icon={<LogoutOutlined style={{ color: "orangered" }} />} onClick={handleLogout}>
                     Logout
                 </Menu.Item>
             </Menu>
@@ -68,7 +71,16 @@ const App = () => {
                 onSelectMenuItem={handleSelectMenuItem}
             />
             <Layout>
-                <Header style={{ padding: 0 }}>
+                <Header
+                    style={{
+                        padding: 0,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: '#334155',
+                        borderBottom: '1px solid #808080'
+                    }}
+                >
                     <button
                         type="button"
                         onClick={() => setCollapsed(!collapsed)}
@@ -76,12 +88,56 @@ const App = () => {
                             fontSize: '16px',
                             width: 64,
                             height: 64,
+                            color: 'white',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
                         }}
                     >
-                        {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                        {collapsed ? <MenuUnfoldOutlined style={{ color: 'white' }} /> : <MenuFoldOutlined style={{ color: 'white' }} />}
+                    </button>
+
+                    <h4 style={{
+                        color: 'white',
+                        fontFamily: 'cursive',
+                        margin: 0,
+                        fontWeight: 'bold',
+                        flexGrow: 1,
+                        textAlign: 'center', // Centrer le texte
+                    }}>
+                        SkillHub
+                    </h4>
+
+                    <button
+                        style={{
+                            fontSize: '16px',
+                            width: 64,
+                            height: 64,
+                            color: 'white',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                        }}
+                        type="button"
+                    >
+                        {/* Ajout de l'icône de notification */}
+                        <BellOutlined
+                            style={{
+                                fontWeight: "bold",
+                                fontSize: "20px",
+                                color: "white"
+                            }}
+                        />
                     </button>
                 </Header>
-                <Content style={{ margin: '24px 16px', padding: 24, minHeight: 280 }}>
+
+                <Content style={{
+                    margin: '24px 16px',
+                    padding: 24,
+                    minHeight: 280,
+                    background: 'white',
+                    borderRadius: '8px',
+                }}>
                     {selectedMenuItem === '1' && <InstructorAllCourses />}
                     {selectedMenuItem === '2' && <InstructorProfile />}
                 </Content>

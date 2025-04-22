@@ -5,13 +5,16 @@ import {
     MenuUnfoldOutlined,
     UserOutlined,
     LogoutOutlined,
-    BookOutlined, HomeOutlined, BellOutlined, TeamOutlined,
+    BookOutlined,
+    HomeOutlined,
+    TeamOutlined
 } from '@ant-design/icons';
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AdminAllCourses from "../Components/AdminAllCourses";
 import AdminCoursesReq from "../Components/AdminCoursesReq";
 import AdminProfile from "../Components/AdminProfile";
 import AdminAllStudents from "../Components/AdminAllStudents";
+import AdminAllInstructors from "../Components/AdminAllInstructors";
 
 const { Header, Sider, Content } = Layout;
 
@@ -30,7 +33,7 @@ const AdminHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
             trigger={null}
             collapsible
             collapsed={collapsed}
-            style={{ left: 0 }}
+            style={{ left: 0, background: '#334155' }} // Fond sombre pour le Sider
             className="custom-sider"
         >
             <div className="demo-logo-vertical" />
@@ -39,21 +42,25 @@ const AdminHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
                 mode="inline"
                 defaultSelectedKeys={['1']}
                 onSelect={onSelectMenuItem}
+                style={{ background: '#334155', color: 'white' }} // Fond sombre pour le menu et texte blanc
             >
-                <Menu.Item key="1" icon={<HomeOutlined />}>
+                <Menu.Item key="1" icon={<HomeOutlined style={{ color: "white" }} />}>
                     Course Requests
                 </Menu.Item>
-                <Menu.Item key="2" icon={<BookOutlined />}>
+                <Menu.Item key="2" icon={<BookOutlined style={{ color: "white" }} />}>
                     All Courses
                 </Menu.Item>
-                <Menu.Item key="3" icon={<TeamOutlined />}>
+                <Menu.Item key="3" icon={<TeamOutlined style={{ color: "white" }} />}>
                     All Students
                 </Menu.Item>
-                <Menu.Item key="4" icon={<UserOutlined />}>
+                <Menu.Item key="4" icon={<TeamOutlined style={{ color: "white" }} />}>
+                    All Instructors
+                </Menu.Item>
+                <Menu.Item key="5" icon={<UserOutlined style={{ color: "white" }} />}>
                     Profile
                 </Menu.Item>
-                <hr style={{marginTop:'30px', color:'white'}} />
-                <Menu.Item key="5" style={{marginTop:'30px'}} icon={<LogoutOutlined style={{color:"orangered"}} />} onClick={handleLogout}>
+                <Menu.Divider style={{ borderColor: 'white' }} /> {/* Ligne de séparation blanche */}
+                <Menu.Item key="6" icon={<LogoutOutlined style={{ color: "orangered" }} />} onClick={handleLogout}>
                     Logout
                 </Menu.Item>
             </Menu>
@@ -65,7 +72,7 @@ const App = () => {
     const [collapsed, setCollapsed] = useState(false);
     const [selectedMenuItem, setSelectedMenuItem] = useState('1');
 
-    const handleSelectMenuItem = ({ item, key }) => {
+    const handleSelectMenuItem = ({ key }) => {
         setSelectedMenuItem(key);
     };
 
@@ -76,7 +83,10 @@ const App = () => {
                 onSelectMenuItem={handleSelectMenuItem}
             />
             <Layout>
-                <Header style={{ padding: 0 }}>
+                <Header style={{
+                    padding: 0,
+                    background: '#334155' // Fond sombre pour le header
+                }}>
                     <button
                         type="button"
                         onClick={() => setCollapsed(!collapsed)}
@@ -84,16 +94,21 @@ const App = () => {
                             fontSize: '16px',
                             width: 64,
                             height: 64,
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#fff'
                         }}
                     >
-                        {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                        {collapsed ? <MenuUnfoldOutlined style={{ color: 'white' }} /> : <MenuFoldOutlined style={{ color: 'white' }} />}
                     </button>
                 </Header>
                 <Content style={{ margin: '24px 16px', padding: 24, minHeight: 280 }}>
                     {selectedMenuItem === '1' && <AdminCoursesReq />}
                     {selectedMenuItem === '2' && <AdminAllCourses />}
                     {selectedMenuItem === '3' && <AdminAllStudents />}
-                    {selectedMenuItem === '4' && <AdminProfile />}
+                    {selectedMenuItem === '4' && <AdminAllInstructors />}
+                    {selectedMenuItem === '5' && <AdminProfile />}
                 </Content>
             </Layout>
         </Layout>

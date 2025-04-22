@@ -1,202 +1,502 @@
 const bcrypt = require('bcrypt');
-const Admin = require('../models/AdminModel');
 const { generateToken } = require('../middleware/auth');
 const axios = require('axios');
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+const Admin = require('../models/adminModel');
 
-exports.adminSignup = async (req, res) => {
+dotenv.config();
+
+// Method to verify activation key
+exports.verifyAdminKey = async (req, res) => {
     try {
-        const existingAdmin = await Admin.findOne({ email: req.body.email });
-        if (existingAdmin) {
-            return res.status(400).json({ message: 'Email already exists' });
+        const { activationKey } = req.body;
+
+        if (!activationKey) {
+            return res.status(400).json({
+                success: false,
+                message: 'Activation key required'
+            });
         }
 
-        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        // Remove spaces and invisible characters
+        const cleanedInputKey = activationKey.trim();
+        const cleanedEnvKey = process.env.ADMIN_ACTIVATION_KEY.trim();
 
-        const newAdmin = new Admin({
-            name: req.body.name,
-            email: req.body.email,
-            password: hashedPassword,
-            userType: req.body.userType || 'admin'
+        console.log('Clé reçue du client:', cleanedInputKey);
+        console.log('Clé attendue (.env):', cleanedEnvKey);
+
+        if (cleanedInputKey !== cleanedEnvKey) {
+            return res.status(403).json({
+                success: false,
+                message: 'Invalid activation key',
+                debug: {
+                    received: cleanedInputKey,
+                    expected: cleanedEnvKey,
+                    match: cleanedInputKey === cleanedEnvKey
+                }
+            });
+        }
+
+        const tempToken = jwt.sign(
+            { canRegisterAdmin: true },
+            process.env.JWT_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        res.json({
+            success: true,
+            message: 'Activation key validated',
+            token: tempToken
         });
-
-        const savedAdmin = await newAdmin.save();
-
-        res.status(201).json({ message: 'Admin created successfully', adminId: savedAdmin._id });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('Verification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error during verification',
+            error: error.message
+        });
     }
 };
 
-exports.adminLogin = async (req, res) => {
+// Admin signup method updated with temporary token verification
+exports.adminSignup = async (req, res) => {
     try {
-        const admin = await Admin.findOne({ email: req.body.email });
-        if (!admin) {
-            return res.status(404).json({ message: 'Admin not found' });
+        // Verify temporary token
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Authorization token required'
+            });
         }
 
-        const passwordMatch = await bcrypt.compare(req.body.password, admin.password);
-        if (!passwordMatch) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (!decoded.canRegisterAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: 'Invalid authorization token'
+            });
         }
+
+        const { name, email, password } = req.body;
+
+        // Check if admin already exists
+        const existingAdmin = await Admin.findOne({ email });
+        if (existingAdmin) {
+            return res.status(400).json({
+                success: false,
+                message: 'Admin already exists'
+            });
+        }
+
+        // Validate password
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password must contain at least 10 characters, one uppercase, one lowercase, one number, and one special character'
+            });
+        }
+
+        // Create new admin
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const admin = new Admin({
+            name,
+            email,
+            password: hashedPassword,
+            userType: 'admin'
+        });
+
+        await admin.save();
+
+        // Generate final JWT token
+        const authToken = generateToken(admin);
+
+        res.status(201).json({
+            success: true,
+            message: 'Admin created successfully',
+            token: authToken,
+            admin: {
+                id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                role: admin.userType
+            }
+        });
+    } catch (error) {
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(403).json({
+                success: false,
+                message: 'Invalid or expired token'
+            });
+        }
+        res.status(500).json({
+            success: false,
+            message: 'Error creating admin',
+            error: error.message
+        });
+    }
+};
+
+// Admin login method enhanced
+exports.adminLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Basic validation
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email and password are required'
+            });
+        }
+
+        console.log('Login attempt:', email, password);
+
+        const admin = await Admin.findOne({ email: email.toLowerCase() }).select('+password');
+        if (!admin) {
+            console.log('Admin not found');
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
+
+
+        const passwordMatch = await bcrypt.compare(password, admin.password);
+        if (!passwordMatch) {
+            console.log('Incorrect password');
+        }
+
+
+        // Update last access time
+        admin.lastAccess = new Date();
+        await admin.save();
 
         const token = generateToken(admin);
 
-        res.status(200).json({ token, adminId: admin._id });
+        res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            token,
+            admin: {
+                id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                role: admin.userType
+            }
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        res.status(500).json({
+            success: false,
+            message: 'Server error during login',
+            error: error.message
+        });
     }
 };
 
+// Existing methods enhanced with error handling and security
 exports.getAllCourses = async (req, res) => {
     try {
-        const response = await axios.get(`http://localhost:8072/api/instructor/courses`);
-
-        const courses = response.data;
-
-        res.status(200).json(courses);
+        const response = await axios.get('http://localhost:8072/api/instructor/courses', {
+            headers: {
+                'Authorization': req.headers.authorization
+            }
+        });
+        res.status(200).json({
+            success: true,
+            data: response.data
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        console.error('Error fetching courses:', error);
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.message || 'Failed to fetch courses';
+        res.status(status).json({
+            success: false,
+            message
+        });
     }
 };
 
 exports.getAllStudents = async (req, res) => {
     try {
-        const response = await axios.get(`http://localhost:8073/api/learner/all-learners`);
-
-        const students = response.data;
-
-        res.status(200).json(students);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-}
-
-exports.viewAdminProfile = async (req, res) => {
-    try {
-        const adminId = req.user.id;
-
-        const admin = await Admin.findById(adminId);
-        if (!admin) {
-            return res.status(404).json({ message: 'Admin not found' });
-        }
-
+        const response = await axios.get('http://localhost:8073/api/learner/all-learners', {
+            headers: {
+                'Authorization': req.headers.authorization
+            }
+        });
         res.status(200).json({
-            name: admin.name,
-            email: admin.email
+            success: true,
+            data: response.data
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
-    }
-};
-
-exports.updateAdminProfile = async (req, res) => {
-    try {
-        const adminId = req.user.id;
-
-        const updatedAdmin = await Admin.findByIdAndUpdate(adminId, req.body, { new: true });
-        if (!updatedAdmin) {
-            return res.status(404).json({ message: 'Admin not found' });
-        }
-
-        res.status(200).json(updatedAdmin);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
-    }
-};
-
-exports.updateCourseStatus = async (req, res) => {
-    try {
-        const { courseId, status } = req.body;
-
-        if (!courseId || !status || !['pending', 'accepted', 'rejected'].includes(status)) {
-            return res.status(400).json({ message: 'Invalid request data' });
-        }
-
-        const response = await axios.put(`http://localhost:8072/api/instructor/course/${courseId}/status`, { status });
-
-        res.status(200).json(response.data);
-    } catch (error) {
-        console.error(error);
-        if (error.response && error.response.status) {
-            return res.status(error.response.status).json(error.response.data);
-        }
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-
-exports.deleteCourse = async (req, res) => {
-    try {
-        const { courseId } = req.params;
-        await axios.delete(`http://localhost:8072/api/instructor/course/${courseId}`);
-        res.status(200).json({ message: 'Course deleted successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error deleting course' });
-    }
-};
-
-
-exports.deleteLearner = async (req, res) => {
-    try {
-        const { learnerId } = req.params;
-
-        await axios.delete(`http://localhost:8073/api/learner/${learnerId}`);
-
-        res.status(200).json({ message: 'Learner deleted successfully' });
-    } catch (error) {
-        console.error(error);
-        if (error.response && error.response.status) {
-            return res.status(error.response.status).json(error.response.data);
-        }
-        res.status(500).json({ message: 'Internal Server Error' });
+        console.error('Error fetching students:', error);
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.message || 'Failed to fetch students';
+        res.status(status).json({
+            success: false,
+            message
+        });
     }
 };
 
 exports.getAllInstructors = async (req, res) => {
     try {
-        const response = await axios.get(`http://localhost:8072/api/instructor/all`);
-        res.status(200).json(response.data);
+        const response = await axios.get('http://localhost:8072/api/instructor/all', {
+            headers: {
+                'Authorization': req.headers.authorization
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            data: response.data
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching instructors' });
+        console.error('Error fetching instructors:', error);
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.message || 'Failed to fetch instructors';
+        res.status(status).json({
+            success: false,
+            message
+        });
     }
 };
 
-exports.createInstructor = async (req, res) => {
+exports.viewAdminProfile = async (req, res) => {
     try {
-        const response = await axios.post(`http://localhost:8072/api/instructor/signup`, req.body);
-        res.status(201).json(response.data);
+        const admin = await Admin.findById(req.user.id).select('-password');
+        if (!admin) {
+            return res.status(404).json({
+                success: false,
+                message: 'Admin not found'
+            });
+        }
+        res.status(200).json({
+            success: true,
+            data: admin
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error creating instructor' });
+        console.error('Error viewing admin profile:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch admin profile',
+            error: error.message
+        });
     }
 };
+
+exports.updateAdminProfile = async (req, res) => {
+    try {
+        const updates = {};
+        if (req.body.name) updates.name = req.body.name;
+
+        // Disallow changing email or role via this route
+        const updatedAdmin = await Admin.findByIdAndUpdate(
+            req.user.id,
+            updates,
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!updatedAdmin) {
+            return res.status(404).json({
+                success: false,
+                message: 'Admin not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully',
+            data: updatedAdmin
+        });
+    } catch (error) {
+        console.error('Error updating admin profile:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update profile',
+            error: error.message
+        });
+    }
+};
+
+exports.updateLearner = async (req, res) => {
+    const { learnerId } = req.params;
+    const { name, email, description, password } = req.body; // Ajouter password
+
+    try {
+        const response = await axios.put(`http://localhost:8073/api/learner/${learnerId}`, {
+            name,
+            email,
+            description,
+            password // Inclure le mot de passe
+        });
+
+        res.status(response.status).json(response.data);
+    } catch (error) {
+        console.error('Error updating learner:', error.response ? error.response.data : error.message);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 
 exports.getInstructorById = async (req, res) => {
     try {
         const { instructorId } = req.params;
-        const response = await axios.get(`http://localhost:8072/api/instructor/${instructorId}/profile`);
-        res.status(200).json(response.data);
+
+        const response = await axios.get(`http://localhost:8072/api/instructor/${instructorId}`, {
+            headers: {
+                'Authorization': req.headers.authorization
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            data: response.data
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching instructor' });
+        console.error('Error fetching instructor by ID:', error);
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.message || 'Failed to fetch instructor';
+        res.status(status).json({
+            success: false,
+            message
+        });
     }
 };
 
 exports.deleteInstructor = async (req, res) => {
     try {
         const { instructorId } = req.params;
-        await axios.delete(`http://localhost:8072/api/instructor/${instructorId}`);
-        res.status(200).json({ message: 'Instructor deleted successfully' });
+
+        // Vérification supplémentaire pour les opérations sensibles
+        if (req.user.id === instructorId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot delete your own account'
+            });
+        }
+
+        await axios.delete(`http://localhost:8072/api/instructor/${instructorId}`, {
+            headers: {
+                'Authorization': req.headers.authorization
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Instructor deleted successfully'
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error deleting instructor' });
+        console.error('Error deleting instructor:', error);
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.message || 'Failed to delete instructor';
+        res.status(status).json({
+            success: false,
+            message
+        });
     }
 };
 
+exports.deleteCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+
+        await axios.delete(`http://localhost:8072/api/instructor/course/${courseId}`, {
+            headers: {
+                'Authorization': req.headers.authorization
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Course deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting course:', error);
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.message || 'Failed to delete course';
+        res.status(status).json({
+            success: false,
+            message
+        });
+    }
+};
+exports.deleteLearner = async (req, res) => {
+    try {
+        const { learnerId } = req.params;
+
+        // Appel au microservice "learner"
+        await axios.delete(`http://localhost:8073/api/learner/${learnerId}`, {
+            headers: {
+                'Authorization': req.headers.authorization
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Learner deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting learner:', error);
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.message || 'Failed to delete learner';
+        res.status(status).json({
+            success: false,
+            message
+        });
+    }
+};
+
+exports.createInstructor = async (req, res) => {
+    try {
+        const instructorData = req.body;
+
+        const response = await axios.post('http://localhost:8072/api/instructor/signup', instructorData, {
+            headers: {
+                'Authorization': req.headers.authorization
+            }
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Instructor created successfully',
+            data: response.data
+        });
+    } catch (error) {
+        console.error('Error creating instructor:', error);
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.message || 'Failed to create instructor';
+        res.status(status).json({
+            success: false,
+            message
+        });
+    }
+};
+exports.createLearner = async (req, res) => {
+    try {
+        const learnerData = req.body;
+
+        const response = await axios.post('http://localhost:8073/api/learner/signup', learnerData, {
+            headers: {
+                'Authorization': req.headers.authorization
+            }
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Learner created successfully',
+            data: response.data
+        });
+    } catch (error) {
+        console.error('Error creating learner:', error);
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.message || 'Failed to create learner';
+        res.status(status).json({
+            success: false,
+            message
+        });
+    }
+};

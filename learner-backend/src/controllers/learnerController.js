@@ -21,38 +21,54 @@ exports.createLearner = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            description
+            description,
+            userType: 'learner'  
         });
 
         await newLearner.save();
-
         res.status(201).json({ message: 'Learner created successfully' });
     } catch (error) {
-        console.error(error);
+        console.error('Error creating learner:', error.stack);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 
 exports.learnerLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const learner = await Learner.findOne({ email });
-        if (!learner) {
-            return res.status(404).json({ message: 'Learner not found' });
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password are required', success: false });
         }
 
-        const passwordMatch = await comparePassword(password, learner.password);
+        console.log(`Login attempt for email: ${email}`);
+
+        const learner = await Learner.findOne({ email });
+        if (!learner) {
+            console.log(`Learner not found for email: ${email}`);
+            return res.status(404).json({ message: 'Learner not found', success: false });
+        }
+
+        console.log('Learner data:', learner);
+
+        const passwordMatch = await bcrypt.compare(password, learner.password);
         if (!passwordMatch) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            console.log('Password does not match for email:', email);
+            return res.status(401).json({ message: 'Invalid credentials', success: false });
         }
 
         const token = generateToken(learner);
 
-        res.status(200).json({ token, learnerId: learner._id });
+        res.status(200).json({ 
+            token, 
+            learnerId: learner._id,
+            success: true,
+            message: 'Login successful'
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        console.error('Login error:', error.stack);
+        res.status(500).json({ message: 'Internal server error', error: error.message, success: false });
     }
 };
 
@@ -73,19 +89,38 @@ exports.viewLearnerProfile = async (req, res) => {
 exports.updateLearnerProfile = async (req, res) => {
     try {
         const learnerId = req.user.id;
-        const { name, description } = req.body;
+        const { name, description, email, currentPassword, newPassword } = req.body;
 
-        const updatedLearner = await Learner.findByIdAndUpdate(
-            learnerId,
-            { name, description },
-            { new: true }
-        );
-
-        if (!updatedLearner) {
+        const learner = await Learner.findById(learnerId);
+        if (!learner) {
             return res.status(404).json({ message: 'Learner not found' });
         }
 
-        res.status(200).json({ message: 'Learner profile updated successfully', learner: updatedLearner });
+        // Vérifier si l'email est différent et existe déjà
+        if (email && email !== learner.email) {
+            const existingEmail = await Learner.findOne({ email });
+            if (existingEmail) {
+                return res.status(400).json({ message: 'Email is already in use' });
+            }
+            learner.email = email;
+        }
+
+        learner.name = name || learner.name;
+        learner.description = description || learner.description;
+
+        if (currentPassword && newPassword) {
+            const isMatch = await comparePassword(currentPassword, learner.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: 'Current password is incorrect' });
+            }
+
+            const hashedNewPassword = await hashPassword(newPassword);
+            learner.password = hashedNewPassword;
+        }
+
+        await learner.save();
+
+        res.status(200).json({ message: 'Learner profile updated successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
@@ -222,76 +257,39 @@ exports.getEnrollmentByCourseIdAndLearnerId = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
-
-exports.addToCart = async (req, res) => {
-    try {
-        const { learnerId, courseId, title, description, price } = req.body;
-
-        let cart = await Cart.findOne({ learnerId });
-
-        if (!cart) {
-            cart = new Cart({
-                learnerId,
-                courses: [],
-                status: "pending"
-            });
-        }
-
-        const existingCourseIndex = cart.courses.findIndex(
-            course => course.courseId === courseId
-        );
-
-        if (existingCourseIndex !== -1) {
-            return res.status(400).json({ message: "Course is already in the cart" });
-        }
-
-        cart.courses.push({
-            courseId,
-            title,
-            description,
-            price
-        });
-
-        await cart.save();
-
-        res.status(200).json({ message: "Course added to cart successfully" });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-exports.getAllCartContents = async (req, res) => {
+exports.updateLearnerByAdmin = async (req, res) => {
     try {
         const { learnerId } = req.params;
-        const cartContents = await Cart.find({ learnerId });
-        res.status(200).json(cartContents);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
+        const { name, email, description, password } = req.body;
 
-exports.removeCartContent = async (req, res) => {
-    try {
-        const { learnerId, courseId } = req.params;
-        const cart = await Cart.findOne({ learnerId });
-
-        if (!cart) {
-            return res.status(404).json({ message: "Cart not found" });
+        const learner = await Learner.findById(learnerId);
+        if (!learner) {
+            return res.status(404).json({ message: 'Learner not found' });
         }
 
-        console.log("Cart before removal:", cart);
+        // vérifier si l'email est changé et existe déjà
+        if (email && email !== learner.email) {
+            const existingEmail = await Learner.findOne({ email });
+            if (existingEmail) {
+                return res.status(400).json({ message: 'Email is already in use' });
+            }
+            learner.email = email;
+        }
 
-        cart.courses = cart.courses.filter(course => String(course.courseId) !== String(courseId));
+        learner.name = name || learner.name;
+        learner.description = description || learner.description;
 
-        await cart.save();
+        // si le mot de passe est modifié, le hasher avant de sauvegarder
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            learner.password = hashedPassword;
+        }
 
-        console.log("Cart after removal:", cart);
+        await learner.save();
 
-        res.status(200).json({ message: "Course removed from cart successfully" });
+        res.status(200).json({ message: 'Learner updated successfully', learner });
     } catch (error) {
-        console.error('Error removing course from cart:', error);
-        res.status(500).json({ message: "Internal server error", error: error.message });
+        console.error('Error updating learner by admin:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };

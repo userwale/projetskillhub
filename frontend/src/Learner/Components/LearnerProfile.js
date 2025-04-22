@@ -53,6 +53,8 @@ const LearnerProfile = () => {
       if (response.ok) {
         message.success("Learner profile updated successfully");
         fetchLearnerProfile();
+
+       
       } else {
         const data = await response.json();
         message.error(data.message);
@@ -109,6 +111,20 @@ const LearnerProfile = () => {
           >
             <Input.TextArea style={{ borderRadius: "4px" }} />
           </Form.Item>
+          <Form.Item
+            label={<span style={{ fontWeight: "bold" }}>Current Password</span>}
+            name="currentPassword"
+          >
+            <Input.Password style={{ borderRadius: "4px" }} />
+          </Form.Item>
+
+          <Form.Item
+            label={<span style={{ fontWeight: "bold" }}>New Password</span>}
+            name="newPassword"
+          >
+            <Input.Password style={{ borderRadius: "4px" }} />
+          </Form.Item>
+
           <Form.Item>
             <Button
               type="primary"

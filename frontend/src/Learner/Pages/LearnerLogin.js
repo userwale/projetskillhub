@@ -53,7 +53,7 @@ const LearnerLogin = () => {
                     <Input.Password />
                 </Form.Item>
 
-                <Form.Item name="remember" >
+                <Form.Item name="remember" valuePropName="checked">
                     <Checkbox>Remember me</Checkbox>
                 </Form.Item>
 

@@ -1,13 +1,11 @@
-//code cluster :9qvhieCi9Pzg4voU
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const admin = require('../src/routes/adminRoutes');
-
-const app = express();
-require('dotenv').config();
 const cors = require('cors');
+const app = express();
 
 app.use(cors(
     {
@@ -40,3 +38,5 @@ app.use((err, req, res, next) => {
 const port = process.env.PORT || 8071;
 
 app.listen(port, () => console.log(`Server up and running on port ${port}!`));
+
+console.log('Loaded ADMIN_ACTIVATION_KEY:', process.env.ADMIN_ACTIVATION_KEY);

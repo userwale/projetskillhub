@@ -6,31 +6,31 @@ dotenv.config();
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
+if (!SECRET_KEY) {
+    console.error("⚠️ SECRET_KEY is undefined. Check your .env file!");
+}
+
 exports.hashPassword = async (password) => {
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    return hashedPassword;
+    return await bcrypt.hash(password, salt);
 };
 
 exports.comparePassword = async (password, hashedPassword) => {
-    const isValid = await bcrypt.compare(password, hashedPassword);
-    return isValid;
+    return await bcrypt.compare(password, hashedPassword);
 };
 
 exports.generateToken = (user) => {
     const payload = {
         id: user._id,
         username: user.email,
-        role: user.userType
+        role: user.userType || 'learner'  // sécurisé avec fallback
     };
-    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '6h' });
-    return token;
+    return jwt.sign(payload, SECRET_KEY, { expiresIn: '6h' });
 };
 
 exports.verifyToken = (token) => {
     try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        return decoded;
+        return jwt.verify(token, SECRET_KEY);
     } catch (err) {
         return null;
     }
@@ -38,9 +38,7 @@ exports.verifyToken = (token) => {
 
 exports.authenticate = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    if (!authHeader) {
-        return res.status(401).send('Access Denied');
-    }
+    if (!authHeader) return res.status(401).send('Access Denied');
     const token = authHeader.split(' ')[1];
     try {
         const verified = jwt.verify(token, SECRET_KEY);
@@ -48,7 +46,7 @@ exports.authenticate = async (req, res, next) => {
         req.user = verified;
         next();
     } catch (err) {
-        console.error(err);
+        console.error('Token verification failed:', err);
         res.status(400).send('Invalid Token');
     }
 };

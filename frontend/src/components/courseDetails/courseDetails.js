@@ -1,4 +1,4 @@
-// CourseDetails.js
+
 import React from 'react';
 
 function CourseDetails() {

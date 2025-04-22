@@ -1,0 +1,63 @@
+.admin-signup-container {
+    background: linear-gradient(135deg, #001529 0%, #003366 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.admin-signup-card {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.admin-title {
+    color: #001529;
+    font-weight: 600;
+}
+
+.admin-subtitle {
+    color: #666;
+    font-size: 1rem;
+}
+
+.admin-divider {
+    border-top: 2px solid #1890ff;
+    margin: 10px 0;
+}
+
+.admin-input {
+    border-radius: 5px;
+    padding: 10px 15px;
+}
+
+.admin-input .ant-input-prefix {
+    color: #1890ff;
+    margin-right: 8px;
+}
+
+.admin-signup-btn {
+    background: #001529;
+    border: none;
+    height: 45px;
+    font-weight: 600;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.admin-signup-btn:hover {
+    background: #003366;
+    transform: translateY(-2px);
+}
+
+.admin-login-link {
+    color: #1890ff;
+    transition: color 0.3s;
+}
+
+.admin-login-link:hover {
+    color: #096dd9;
+}

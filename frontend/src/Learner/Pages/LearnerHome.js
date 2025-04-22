@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import LearnerProfile from "../Components/LearnerProfile";
 import LearnerMyCourses from "../Components/LearnerMyCourses";
 import LearnerAllCourses from "../Components/LearnerAllCourses";
-import LearnerTickets from "../Components/LearnerTicket";
+
 const { Header, Sider, Content } = Layout;
 
 const LearnerHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
@@ -27,41 +27,61 @@ const LearnerHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
     navigate("/login");
   };
 
+  // Style pour les icônes (blanc pour contraste sur fond noir)
+  const iconStyle = { color: "white" };
+
   return (
     <Sider
       trigger={null}
       collapsible
       collapsed={collapsed}
-      style={{ left: 0 }}
+      style={{
+        left: 0,
+        background: "#334155", // gris plus clair
+        borderRight: "1px solid #FFFFFF" // bordure blanche
+      }}
       className="custom-sider"
     >
       <div className="demo-logo-vertical" />
       <Menu
-        theme="dark"
+        theme="dark" // Thème sombre pour fond noir
         mode="inline"
         defaultSelectedKeys={["1"]}
         onSelect={onSelectMenuItem}
+        style={{
+          background: "#334155", // gris plus clair
+          color: "white"
+        }}
       >
-        <Menu.Item key="1" icon={<BookOutlined />}>
+        <Menu.Item key="1" icon={<BookOutlined style={iconStyle} />}>
           All Courses
         </Menu.Item>
-        <Menu.Item key="2" icon={<HomeOutlined />}>
+        <Menu.Item key="2" icon={<HomeOutlined style={iconStyle} />}>
           My Courses
         </Menu.Item>
-        <Menu.Item key="3" icon={<UserOutlined />}>
+        <Menu.Item key="3" icon={<UserOutlined style={iconStyle} />}>
           Profile
         </Menu.Item>
-        <hr style={{ marginTop: "30px", color: "white" }} />
 
+        <hr style={{
+          marginTop: "30px",
+          borderColor: "#FFFFFF",  // Trait blanc
+          borderWidth: "1px", // Taille du trait
+          opacity: 0.5
+        }} />
+        <hr style={{
+          marginTop: "20px",
+          borderColor: "#FFFFFF", // Trait blanc
+          borderWidth: "1px", // Taille du trait
+          opacity: 0.5
+        }} />
 
-        <Menu.Item key="5" icon={<BookOutlined />}>
-          My Tickets
-        </Menu.Item>
-
-        <hr style={{ marginTop: "20px", color: "white" }} />
         <Menu.Item
           key="6"
-          style={{ marginTop: "30px" }}
+          style={{
+            marginTop: "30px",
+            color: "white"
+          }}
           icon={<LogoutOutlined style={{ color: "orangered" }} />}
           onClick={handleLogout}
         >
@@ -93,6 +113,8 @@ const App = () => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            background: "#334155", // gris plus clair
+            borderBottom: "1px solid #808080" // bordure plus claire
           }}
         >
           <button
@@ -103,14 +125,29 @@ const App = () => {
               width: 64,
               height: 64,
               color: "white",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
             }}
           >
-            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            {collapsed ? (
+              <MenuUnfoldOutlined style={{ color: "white" }} />
+            ) : (
+              <MenuFoldOutlined style={{ color: "white" }} />
+            )}
           </button>
 
-          <h4 style={{ color: "white", fontFamily: "cursive" }}>
-            S k i l l H u b
+          <h4 style={{
+            color: "white",
+            fontFamily: "cursive",
+            margin: 0,
+            fontWeight: "bold",
+            flexGrow: 1, // Prend tout l'espace restant
+            textAlign: "center", // Centrer le texte dans le Header
+          }}>
+            SkillHub
           </h4>
+
 
           <button
             style={{
@@ -118,17 +155,34 @@ const App = () => {
               width: 64,
               height: 64,
               color: "white",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
             }}
             type="button"
           >
-            <BellOutlined style={{ fontWeight: "bold", fontSize: "20px" }} />
+            <BellOutlined
+              style={{
+                fontWeight: "bold",
+                fontSize: "20px",
+                color: "white"
+              }}
+            />
           </button>
         </Header>
-        <Content style={{ margin: "24px 16px", padding: 24, minHeight: 280 }}>
+
+        <Content
+          style={{
+            margin: "24px 16px",
+            padding: 24,
+            minHeight: 280,
+            background: "white",
+            borderRadius: "8px"
+          }}
+        >
           {selectedMenuItem === "1" && <LearnerAllCourses />}
           {selectedMenuItem === "2" && <LearnerMyCourses />}
           {selectedMenuItem === "3" && <LearnerProfile />}
-          {selectedMenuItem === "4" && <LearnerTickets />}
         </Content>
       </Layout>
     </Layout>

@@ -124,22 +124,38 @@ exports.viewInstructorProfile = async (req, res) => {
 exports.updateInstructorProfile = async (req, res) => {
     try {
         const instructorId = req.params.instructorId;
-        const updatedProfile = req.body;
+        const { name, email, title, currentPassword, newPassword } = req.body;
 
-        const instructor = await Instructor.findByIdAndUpdate(instructorId, updatedProfile, { new: true });
+        const instructor = await Instructor.findById(instructorId);
 
         if (!instructor) {
             return res.status(404).json({ message: 'Instructor not found' });
         }
 
-        const { password, ...updatedData } = instructor.toObject();
+        // Mettre à jour les champs classiques
+        instructor.name = name || instructor.name;
+        instructor.email = email || instructor.email;
+        instructor.title = title || instructor.title;
 
+        // Si l'utilisateur souhaite changer son mot de passe
+        if (currentPassword && newPassword) {
+            const isPasswordValid = await comparePassword(currentPassword, instructor.password);
+            if (!isPasswordValid) {
+                return res.status(400).json({ message: 'Current password is incorrect' });
+            }
+            instructor.password = await hashPassword(newPassword);
+        }
+
+        await instructor.save();
+
+        const { password, ...updatedData } = instructor.toObject();
         res.status(200).json(updatedData);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
 
 exports.addNewCourse = async (req, res) => {
     try {

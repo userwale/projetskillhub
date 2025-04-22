@@ -2,29 +2,45 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const auth = require('../middleware/auth');
+const rateLimit = require('express-rate-limit');
 
-// ---------- AUTH ----------
-router.post('/signup', adminController.adminSignup);
-router.post('/login', adminController.adminLogin);
+// Configuration de la limitation de taux
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5,                   // 5 requêtes max par fenêtre
+    message: {
+        success: false,
+        message: 'Too many attempts, please try again later.'
+    },
+    standardHeaders: true,     // Retourne les infos de limite dans les headers
+    legacyHeaders: false       // Désactive les headers X-RateLimit-*
+});
+
+// ---------- ADMIN AUTHENTICATION ----------
+router.post('/verify-key', authLimiter, adminController.verifyAdminKey);
+router.post('/signup', authLimiter, adminController.adminSignup);
+router.post('/login', authLimiter, adminController.adminLogin);
 
 // ---------- ADMIN PROFILE ----------
-router.get('/profile', auth.authenticate, adminController.viewAdminProfile);
-router.put('/profile', auth.authenticate, adminController.updateAdminProfile);
+router.get('/profile', auth.authenticate, adminController.viewAdminProfile)
+router.put('/profile',auth.authenticate, adminController.updateAdminProfile);
 
-// ---------- LEARNERS ----------
-router.get('/all-students', adminController.getAllStudents); // Liste tous les learners
-router.delete('/learner/:learnerId', adminController.deleteLearner); // Supprimer un learner
+// ---------- LEARNERS MANAGEMENT ----------
+router.get('/learners', auth.authenticate, adminController.getAllStudents);
+router.delete('/learner/:learnerId', auth.authenticate, adminController.deleteLearner);
+router.post('/learners', auth.authenticate, adminController.createLearner);
+router.put('/learner/:learnerId', auth.authenticate, adminController.updateLearner);
 
-// ---------- COURSES ----------
-router.put('/course/:courseId/status', adminController.updateCourseStatus);// Changer le statut d’un cours
-router.get('/all-courses', auth.authenticate, adminController.getAllCourses);// Lister tous les cours
-router.delete('/course/:courseId', adminController.deleteCourse); // Supprimer un cours
+// ---------- COURSES MANAGEMENT ----------
+router.get('/courses',auth.authenticate, adminController.getAllCourses);
+router.delete('/course/:courseId', auth.authenticate, adminController.deleteCourse);
 
-// ---------- INSTRUCTORS ----------
-router.get('/instructors', adminController.getAllInstructors); // Lister tous les instructeurs
-router.post('/instructor', adminController.createInstructor); // Créer un instructeur
-router.get('/instructor/:instructorId', adminController.getInstructorById); // Lire un instructeur
-router.delete('/instructor/:instructorId', adminController.deleteInstructor); // Supprimer un instructeur
+// ---------- INSTRUCTORS MANAGEMENT ----------
+router.get('/instructors',auth.authenticate, adminController.getAllInstructors)
+router.post('/instructors', auth.authenticate, adminController.createInstructor);
+
+router.get('/instructor/:instructorId',auth.authenticate, adminController.getInstructorById)
+router.delete('/instructor/:instructorId',auth.authenticate, adminController.deleteInstructor);
 
 
 module.exports = router;

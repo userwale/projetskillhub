@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Card, Form, Input, message } from 'antd'; // Import Input from antd
+import { Button, Card, Form, Input, message } from 'antd';
 import { Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 const InstructorProfile = () => {
     const navigate = useNavigate();
+    const [form] = Form.useForm(); // Utiliser l'instance Form pour mieux contrôler
     const [loading, setLoading] = useState(false);
-    const [profile, setProfile] = useState({
-        name: '',
-        email: '',
-        title: '',
-        newPassword: ''
-    });
 
     useEffect(() => {
         fetchInstructorProfile();
@@ -31,7 +26,7 @@ const InstructorProfile = () => {
             }
             const data = await response.json();
             console.log('Fetched profile:', data);
-            setProfile(data); // Update profile state with fetched data
+            form.setFieldsValue(data); // Remplir les champs du formulaire avec les données
         } catch (error) {
             console.error('Error:', error.message);
             message.error('Failed to fetch instructor profile');
@@ -50,54 +45,103 @@ const InstructorProfile = () => {
                 },
                 body: JSON.stringify(values),
             });
+    
+            const data = await response.json();
+    
             if (!response.ok) {
-                throw new Error('Update failed');
+                if (data.message === 'Current password is incorrect') {
+                    message.error('Current password is incorrect'); // ✅ Le toast demandé
+                } else {
+                    message.error(data.message || 'Update failed');
+                }
+                setLoading(false);
+                return;
             }
+    
             message.success('Profile updated successfully');
             setLoading(false);
-            navigate('/instructor/home');
+    
+            // Déconnexion après mise à jour
+            localStorage.removeItem('token');
+            localStorage.removeItem('instructorId');
+            navigate('/login');
+            message.info('Please login again to refresh your profile.');
         } catch (error) {
             setLoading(false);
             console.error('Error:', error.message);
             message.error('Failed to update profile');
         }
     };
+    
 
     const onFinishFailed = (errorInfo) => {
         console.log('Failed:', errorInfo);
     };
 
-    console.log('Profile state:', profile);
-
     return (
         <Container style={{ minHeight: '100vh' }}>
             <center>
-                <h1><span className="text-danger">Instructor </span><span className="text-success"> Profile</span></h1>
+                <h1><span className="text-danger">Instructor </span><span className="text-success">Profile</span></h1>
             </center>
             <Card style={{ width: 600, margin: 'auto', marginTop: '50px' }}>
                 <Form
+                    form={form}
                     name="basic"
-                    initialValues={{
-                        remember: true,
-                    }}
+                    layout="vertical"
                     onFinish={onFinish}
                     onFinishFailed={onFinishFailed}
                 >
-                    <Form.Item label="Name" name="name">
-                        <Input value={profile.name} /> {/* Use Input from antd */}
+                    <Form.Item
+                        label="Name"
+                        name="name"
+                        rules={[{ required: true, message: 'Please input your name!' }]}
+                    >
+                        <Input />
                     </Form.Item>
 
-                    <Form.Item label="Email" name="email">
-                        <Input value={profile.email} /> {/* Use Input from antd */}
+                    <Form.Item
+                        label="Email"
+                        name="email"
+                        rules={[{ required: true, message: 'Please input your email!' }]}
+                    >
+                        <Input />
                     </Form.Item>
 
-                    <Form.Item label="Title" name="title">
-                        <Input value={profile.title} /> {/* Use Input from antd */}
+                    <Form.Item
+                        label="Title"
+                        name="title"
+                        rules={[{ required: true, message: 'Please input your title!' }]}
+                    >
+                        <Input />
                     </Form.Item>
 
-                    <Form.Item label="New Password" name="newPassword">
-                        <Input.Password value={profile.newPassword} /> {/* Use Input from antd */}
+                    <Form.Item
+                        label="Current Password"
+                        name="currentPassword"
+                        rules={[{ required: false }]}
+                    >
+                        <Input.Password />
                     </Form.Item>
+
+
+                    <Form.Item
+                        label="New Password"
+                        name="newPassword"
+                        dependencies={['currentPassword']}
+                        rules={[
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    if (!getFieldValue('currentPassword') && value) {
+                                        return Promise.reject(new Error('Please enter your current password to change your password.'));
+                                    }
+                                    return Promise.resolve();
+                                },
+                            }),
+                        ]}
+                    >
+                        <Input.Password />
+                    </Form.Item>
+
 
                     <Button type="primary" htmlType="submit" loading={loading} style={{ width: '100%' }}>
                         Update Profile

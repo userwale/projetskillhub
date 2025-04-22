@@ -8,6 +8,7 @@ const AdminLogin = () => {
     const onFinish = async (values) => {
         setLoading(true);
         try {
+
             const response = await fetch('http://localhost:8071/api/admin/login', {
                 method: 'POST',
                 headers: {
@@ -19,7 +20,7 @@ const AdminLogin = () => {
             const data = await response.json();
             if (response.ok) {
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('adminId', data.adminId);
+                localStorage.setItem('adminId', data.admin._id);
 
                 message.success('Login successful');
                 window.location.href = '/admin/home';

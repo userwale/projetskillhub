@@ -2,31 +2,44 @@ import React, { useState } from 'react';
 import { Form, Input, Button, message, Upload, Select, Spin } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import { storage } from "./firebase"; 
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { v4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';  // Import useNavigate
 
 const AddCourse = () => {
     const [loading, setLoading] = useState(false);
     const [fileUpload, setFileUpload] = useState(null);
+    const [fileList, setFileList] = useState([]); // État pour gérer la liste des fichiers sélectionnés
     const [form] = Form.useForm();
-    const navigate = useNavigate();  // Initialize the navigate function
+    const navigate = useNavigate();  
 
-    // Fonction d'upload de fichier sur Firebase
+    // Fonction de téléchargement du fichier 
     const uploadFile = async () => {
-        if (!fileUpload) return Promise.reject("No file to upload");
-        const fileRef = ref(storage, `/${fileUpload.name + v4()}`);
-        const snapshot = await uploadBytes(fileRef, fileUpload);
-        const url = await getDownloadURL(snapshot.ref);
-        return url;
+        if (!fileUpload) {
+            return ''; // Si aucun fichier n'est sélectionné, retourner une chaîne vide
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileUpload);
+
+        try {
+            const response = await axios.post('http://localhost:8072/api/upload', formData, {  
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+
+            return response.data.fileUrl; // On suppose que le serveur renvoie l'URL du fichier téléchargé
+        } catch (error) {
+            console.error('File upload failed:', error);
+            throw new Error('File upload failed');
+        }
     };
 
     // Fonction de soumission du formulaire
     const onFinish = async (values) => {
         setLoading(true);
         try {
-            const fileUrl = await uploadFile();
+            const fileUrl = await uploadFile();  // Appel à la fonction d'upload de fichier
 
             // Préparer les données du cours
             const data = {
@@ -47,14 +60,24 @@ const AddCourse = () => {
             message.success('Course added successfully!');
             form.resetFields();
 
-            // Redirect to home page after success
-            navigate('/home');  // Redirects to home page or instructor course list
+            // Réinitialiser la liste des fichiers après la soumission
+            setFileList([]); // Vider la liste des fichiers après l'ajout du cours
+
+            // Rediriger vers la page d'accueil ou la liste des cours après succès
+            navigate('/home');
 
         } catch (error) {
             setLoading(false);
             console.error(error.message);
             message.error('Failed to add course. Please try again.');
         }
+    };
+
+    // Gestion de l'upload
+    const handleBeforeUpload = (file) => {
+        setFileUpload(file); // Met à jour le fichier sélectionné
+        setFileList([file]);  // Mets à jour fileList avec le fichier sélectionné
+        return false;  // Empêche l'upload automatique
     };
 
     return (
@@ -70,6 +93,7 @@ const AddCourse = () => {
                     name="title"
                     label="Course Title"
                     rules={[{ required: true, message: 'Please input the course title!' }]}>
+
                     <Input placeholder="Enter course title" />
                 </Form.Item>
 
@@ -77,6 +101,7 @@ const AddCourse = () => {
                     name="description"
                     label="Course Description"
                     rules={[{ required: true, message: 'Please input the course description!' }]}>
+
                     <Input.TextArea placeholder="Enter course description" rows={4} />
                 </Form.Item>
 
@@ -84,6 +109,7 @@ const AddCourse = () => {
                     name="category"
                     label="Category"
                     rules={[{ required: true, message: 'Please select a category!' }]}>
+
                     <Select placeholder="Select category">
                         <Select.Option value="programming">Programming</Select.Option>
                         <Select.Option value="design">Design</Select.Option>
@@ -98,12 +124,11 @@ const AddCourse = () => {
                     rules={[{ required: true, message: 'Please upload a file!' }]}>
                     <Upload
                         name="file"
+                        fileList={fileList}  // Utilisation de fileList pour afficher les fichiers sélectionnés
+                        onRemove={() => setFileList([])}  // Supprimer le fichier de la liste
+                        beforeUpload={handleBeforeUpload} // Gérer le fichier avant de l'ajouter
                         maxCount={1}
                         accept=".pdf,.mp4"
-                        beforeUpload={(file) => {
-                            setFileUpload(file);
-                            return false;
-                        }}
                     >
                         <Button icon={<UploadOutlined />}>Select File</Button>
                     </Upload>

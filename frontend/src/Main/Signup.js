@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Tab, Tabs } from "react-bootstrap";
 import LearnerSignup from "../Learner/Pages/LearnerSignup";
-import AdminSignup from "../Admin/Pages/AdminSignup";
 import InstructorSignup from "../Instructor/Components/InstructorSignup";
 import bgImg from "../assets/images/Login.jpg";
 import { Link } from "react-router-dom";
@@ -45,9 +44,6 @@ export default function Signup() {
               </Tab>
               <Tab eventKey="instructor" title="Instructor">
                 <InstructorSignup />
-              </Tab>
-              <Tab eventKey="admin" title="Admin">
-                <AdminSignup />
               </Tab>
             </Tabs>
             <p className="mt-3">
