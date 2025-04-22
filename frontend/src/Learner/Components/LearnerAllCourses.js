@@ -33,10 +33,7 @@ const LearnerAllCourses = () => {
 
       if (response.ok) {
         const data = await response.json();
-        const acceptedCourses = data.filter(
-          (course) => course.status === "accepted"
-        );
-        setCourses(acceptedCourses);
+        setCourses(data); // Pas de filtrage, on prend tous les cours
       } else {
         message.error("Failed to fetch courses");
       }
@@ -85,7 +82,7 @@ const LearnerAllCourses = () => {
             <div key={course._id} className="col-md-4 mb-4">
               <Card
                 className="rounded-5 shadow-sm"
-                style={{ width: "100%" }}
+                style={{ width: "100%", cursor: "pointer" }}
                 onClick={() => handleCardClick(course)}
               >
                 <div className="row">
@@ -97,14 +94,9 @@ const LearnerAllCourses = () => {
                     />
                   </center>
                 </div>
-                <div className="row">
+                <div className="row mt-2">
                   <center>
-                    <h5>{course.title} </h5>
-                  </center>
-                </div>
-                <div className="row">
-                  <center>
-                    <p className="fw-bold">${course.price}</p>
+                    <h5>{course.title}</h5>
                   </center>
                 </div>
               </Card>
@@ -115,7 +107,7 @@ const LearnerAllCourses = () => {
 
       {/* Modal */}
       <Modal
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={handleCancel}
         footer={null}
         width="90%"
@@ -125,7 +117,7 @@ const LearnerAllCourses = () => {
             <div className="row">
               <div className="col">
                 <div className="row">
-                  <h1 className="text-light bg-dark mb-3">
+                  <h1 className="text-light bg-dark mb-3 p-2 rounded">
                     {selectedCourse.title}
                   </h1>
                 </div>
@@ -135,10 +127,6 @@ const LearnerAllCourses = () => {
                 <div className="row">
                   <h5>Requirements:</h5>
                   <p>{selectedCourse.requirements}</p>
-                </div>
-                <div className="row">
-                  <h5>Price:</h5>
-                  <p>${selectedCourse.price}</p>
                 </div>
               </div>
               <div className="col-4">

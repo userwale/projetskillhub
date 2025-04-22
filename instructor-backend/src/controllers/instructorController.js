@@ -165,8 +165,6 @@ exports.addNewCourse = async (req, res) => {
         const newCourse = new Course({
             title,
             description,
-            requirements,
-            price,
             instructor: instructorId
         });
 
@@ -177,12 +175,7 @@ exports.addNewCourse = async (req, res) => {
             for (let file of files) {
                 const fileExtension = path.extname(file.originalname);
                 const fileName = `${Date.now()}${fileExtension}`;
-                const uploadPath = path.join(__dirname, '../uploads/', fileName);
-
-                await file.mv(uploadPath);
-
-                const fileUrl = `/uploads/${fileName}`;
-
+                const fileUrl = `/uploads/${file.filename}`;
                 content.push({
                     title: file.originalname,
                     doc_type: file.mimetype.split('/')[0],
@@ -292,11 +285,7 @@ exports.updateCourseStatus = async (req, res) => {
     try {
         const courseId = req.params.courseId;
         const { status } = req.body;
-
-        if (!status || !['pending', 'accepted', 'rejected'].includes(status)) {
-            return res.status(400).json({ message: 'Invalid status' });
-        }
-
+        
         const course = await Course.findByIdAndUpdate(courseId, { status }, { new: true });
 
         if (!course) {

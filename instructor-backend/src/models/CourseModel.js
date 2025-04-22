@@ -30,11 +30,6 @@ const CourseSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Instructor'
     },
-    status: {
-        type: String,
-        enum: ['pending', 'accepted', 'rejected'],
-        default: 'pending'
-    }
 });
 
 module.exports = mongoose.model('Course', CourseSchema);

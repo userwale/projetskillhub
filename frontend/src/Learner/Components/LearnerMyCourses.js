@@ -171,7 +171,7 @@ export default function LearnerMyCourses() {
             </Spin>
             <Modal
                 title={selectedCourse ? selectedCourse.title : ''}
-                visible={modalVisible}
+                open={modalVisible}
                 onCancel={closeModal}
                 footer={null}
                 width="80%"

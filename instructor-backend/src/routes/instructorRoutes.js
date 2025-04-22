@@ -5,75 +5,93 @@ const instructorController = require('../controllers/instructorController');
 const multer = require('multer');
 const path = require('path');
 
-// ---------- CONFIGURATION MULTER POUR L'UPLOAD DES FICHIERS ----------
+// ---------- Configuration Multer D'ABORD ----------
+
+// 1. Définir storage
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');  // Dossier où les fichiers seront enregistrés
+        cb(null, path.join(__dirname, '../../uploads')); 
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));  // Renommer le fichier pour éviter les conflits
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
     }
 });
 
-const upload = multer({ storage: storage });
+// 2. Définir fileFilter
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = [
+        'application/pdf',
+        'video/mp4',
+        'image/jpeg',
+        'image/png',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Type de fichier non autorisé'), false);
+    }
+};
 
-// ---------- AUTH ----------
-// Route pour l'inscription d'un instructeur
+// 3. Initialiser upload
+const upload = multer({ storage, fileFilter });
+
+// ---------- Routes d'authentification ----------
 router.post('/signup', instructorController.signupInstructor);
-
-// Route pour la connexion d'un instructeur
 router.post('/login', instructorController.loginInstructor);
 
-// ---------- PROFILE ----------
-// Route pour voir le profil d'un instructeur
-router.get('/:instructorId/profile', instructorController.viewInstructorProfile);
-
-// Route pour mettre à jour le profil d'un instructeur
+// ---------- Routes de profil ----------
+router.get('/:instructorId/profile', auth.authenticate, instructorController.viewInstructorProfile);
 router.put('/:instructorId/profile', auth.authenticate, instructorController.updateInstructorProfile);
 
-// ---------- COURSES ----------
-// Route pour ajouter un nouveau cours
-router.post('/courses', auth.authenticate, instructorController.addNewCourse);
+// ---------- Routes des cours ----------
+router.post('/courses', 
+    auth.authenticate, 
+    upload.array('files', 5), // Jusqu'à 5 fichiers
+    instructorController.addNewCourse
+);
 
-// Route pour obtenir tous les cours d'un instructeur
-router.get('/:instructorId/courses', instructorController.getAllCoursesByInstructorId);
-
-// Route pour obtenir un cours par son ID
+router.get('/:instructorId/courses', auth.authenticate, instructorController.getAllCoursesByInstructorId);
 router.get('/courses/:courseId', instructorController.getCourseById);
-
-// Route pour obtenir tous les cours
 router.get('/courses', instructorController.getAllCourses);
 
-// Route pour ajouter un contenu au cours
-router.post('/courses/:courseId/content', instructorController.addCourseContent);
+router.post('/courses/:courseId/content', 
+    auth.authenticate, 
+    upload.single('file'),
+    instructorController.addCourseContent
+);
 
-// Route pour mettre à jour le statut d'un cours
-router.put('/courses/:courseId/status', instructorController.updateCourseStatus);
+router.put('/courses/:courseId/status', auth.authenticate, instructorController.updateCourseStatus);
+router.delete('/courses/:courseId', auth.authenticate, instructorController.deleteCourse);
 
-// Route pour supprimer un cours
-router.delete('/courses/:courseId', instructorController.deleteCourse);
+// ---------- Routes d'administration des instructeurs ----------
+router.get('/all', auth.authenticate, instructorController.getAllInstructors);
+router.delete('/:instructorId', auth.authenticate, instructorController.deleteInstructor);
+router.post('/instructor', auth.authenticate, instructorController.createInstructor);
 
-// ---------- INSTRUCTORS ----------
-// Route pour obtenir tous les instructeurs
-router.get('/all', instructorController.getAllInstructors);
+// ---------- Route d'upload de fichiers ----------
+router.post('/uploads', 
+    auth.authenticate, 
+    upload.single('file'), 
+    (req, res) => {
+        if (!req.file) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Aucun fichier téléchargé ou type de fichier invalide' 
+            });
+        }
 
-// Route pour supprimer un instructeur
-router.delete('/:instructorId', instructorController.deleteInstructor);
-
-// Route pour créer un instructeur
-router.post('/instructor', instructorController.createInstructor);
-
-// Route pour voir un profil d'instructeur spécifique par son ID
-router.get('/instructor/:instructorId', instructorController.viewInstructorProfile);
-
-// ---------- UPLOADS FICHIERS ----------
-router.post('/upload', auth.authenticate, upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded.' });
+        res.json({
+            success: true,
+            fileUrl: `/uploads/${req.file.filename}`,
+            fileName: req.file.originalname,
+            fileSize: req.file.size,
+            fileType: req.file.mimetype
+        });
     }
-    // Renvoie l'URL du fichier téléchargé
-    const fileUrl = `http://localhost:8072/uploads/${req.file.filename}`;
-    res.json({ fileUrl });
-});
+);
 
 module.exports = router;

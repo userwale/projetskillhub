@@ -21,8 +21,15 @@ const GetAllCoursesByInstructorId = () => {
 
         const fetchCourses = async () => {
             try {
-                const response = await axios.get(`http://localhost:8072/api/instructor/${instructorId}/courses`);
-                setCourses(response.data);
+                const response = await axios.get(
+                    `http://localhost:8072/api/instructor/${instructorId}/courses`,
+                    {
+                      headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                      },
+                    }
+                  );
+                                  setCourses(response.data);
                 setLoading(false);
             } catch (error) {
                 setError(error.message || 'Failed to fetch courses');
@@ -117,8 +124,6 @@ const GetAllCoursesByInstructorId = () => {
                         >
                             <p><strong>Description:</strong> {course.description}</p>
                             <p><strong>Requirements:</strong> {course.requirements}</p>
-                            <p><strong>Price:</strong> {course.price}</p>
-                            <p><strong>Status:</strong> {course.status}</p>
                         </Card>
                     ))}
                 </div>
@@ -130,8 +135,10 @@ const GetAllCoursesByInstructorId = () => {
                 footer={null}
                 width="80%"
                 destroyOnClose
-                style={{ borderRadius: '20px' }}
-                bodyStyle={{ padding: '30px' }}
+                styles={{
+                    body: { padding: '30px' },
+                    content: { borderRadius: '20px' },
+                }}
             >
                 {course && (
                     <div style={{ overflowY: 'auto' }}>

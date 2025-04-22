@@ -1,48 +1,48 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cookieParser = require('cookie-parser');
-const instructor = require('./routes/instructorRoutes');
 const path = require('path');
 const cors = require('cors');
-
-
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
+
 const app = express();
 
-// CORS Configuration
+// Middleware
 app.use(cors({
-    origin: ['http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: 'http://localhost:3000',
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Middleware
-app.use(express.json()); 
+app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
-
-// Connexion à MongoDB
-const db = process.env.MONGODB_URI;
-console.log("Mongo URI:", db); // pour debug
-
-mongoose
-    .connect(db)
-    .then(() => console.log('MongoDB successfully connected'))
-    .catch(err => console.log(err));
+// Static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
-app.use('/api/instructor', instructor);
+const instructorRoutes = require('./routes/instructorRoutes');
+app.use('/api/instructor', instructorRoutes);
 
-// Gestion des erreurs
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('MongoDB connected successfully'))
+    .catch(err => console.error('MongoDB connection error:', err));
+
+// Error handling
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).send('Something went wrong!');
+    res.status(500).json({ 
+        success: false,
+        message: 'Internal Server Error',
+        error: err.message
+    });
 });
 
-// Serveur
-const port = process.env.PORT || 8072;
-app.listen(port, () => console.log(`Server up and running on port ${port}!`));
-
-// Route pour les fichiers téléchargés
-app.use('/uploads', express.static('uploads')); // pour servir les fichiers uploadés
+// Server
+const PORT = process.env.PORT || 8072;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Uploads directory: ${path.join(__dirname, 'uploads')}`);
+});

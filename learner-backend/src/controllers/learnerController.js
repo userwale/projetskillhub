@@ -4,7 +4,6 @@ const Learner = require('../models/LearnerModel');
 const { hashPassword, comparePassword, generateToken } = require('../middleware/auth');
 const Enrollment = require('../models/EnrollmentModel');
 const axios = require('axios');
-const Cart = require('../models/CartModel');
 
 exports.createLearner = async (req, res) => {
     try {

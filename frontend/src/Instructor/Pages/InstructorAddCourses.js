@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Input, Button, message, Upload, Select, Spin } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';  // Import useNavigate
+import { useNavigate } from 'react-router-dom'; 
 
 const AddCourse = () => {
     const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ const AddCourse = () => {
         formData.append('file', fileUpload);
 
         try {
-            const response = await axios.post('http://localhost:8072/api/upload', formData, {  
+            const response = await axios.post('http://localhost:8072/api/instructor/uploads', formData, {  
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
