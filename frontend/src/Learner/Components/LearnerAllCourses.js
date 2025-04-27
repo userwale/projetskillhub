@@ -124,10 +124,6 @@ const LearnerAllCourses = () => {
                 <div className="row">
                   <p>{selectedCourse.description}</p>
                 </div>
-                <div className="row">
-                  <h5>Requirements:</h5>
-                  <p>{selectedCourse.requirements}</p>
-                </div>
               </div>
               <div className="col-4">
                 <img src={courseBg} alt="course" style={{ width: "100%" }} />

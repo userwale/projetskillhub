@@ -11,9 +11,6 @@ const CourseSchema = new Schema({
         type: String,
         required: true,
     },
-    requirements: {
-        type: String
-    },
     content: [{
         title: String,
         doc_type: String,

@@ -37,7 +37,6 @@ const AddNewCourse = () => {
             const formData = new FormData();
             formData.append('title', values.title);
             formData.append('description', values.description);
-            formData.append('requirements', values.requirements);
 
             contentFields.forEach((field, index) => {
                 field.files.forEach((file) => {
@@ -97,13 +96,6 @@ const AddNewCourse = () => {
                                 label="Description"
                                 name="description"
                                 rules={[{ required: true, message: 'Please input the description of the course!' }]}
-                            >
-                                <Input.TextArea />
-                            </Form.Item>
-
-                            <Form.Item
-                                label="Requirements"
-                                name="requirements"
                             >
                                 <Input.TextArea />
                             </Form.Item>

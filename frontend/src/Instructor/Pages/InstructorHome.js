@@ -6,11 +6,11 @@ import {
     UserOutlined,
     LogoutOutlined,
     BookOutlined,
-    BellOutlined, // Ajout de l'icône BellOutlined pour notifications
+    BellOutlined,
 } from '@ant-design/icons';
-import InstructorAllCourses from "./InstructorAllCourses";
-import InstructorProfile from "./InstructorProfile";
 import { useNavigate } from "react-router-dom";
+import InstructorCoursesList from "./Courses/InstructorCoursesList";
+import InstructorProfile from "./InstructorProfile";
 
 const { Header, Sider, Content } = Layout;
 
@@ -29,7 +29,7 @@ const InstructorHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
             trigger={null}
             collapsible
             collapsed={collapsed}
-            style={{ left: 0, background: '#334155' }} // Gris plus clair
+            style={{ left: 0, background: '#334155' }}
             className="custom-sider"
         >
             <div className="demo-logo-vertical" />
@@ -40,15 +40,19 @@ const InstructorHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
                 onSelect={onSelectMenuItem}
                 style={{ background: '#334155', color: 'white' }}
             >
-                <Menu.Item key="1" icon={<BookOutlined style={{ color: "white" }} />} >
+                <Menu.Item key="1" icon={<BookOutlined style={{ color: "white" }} />}>
                     All Courses
                 </Menu.Item>
-                <Menu.Item key="2" icon={<UserOutlined style={{ color: "white" }} />} >
+                <Menu.Item key="2" icon={<UserOutlined style={{ color: "white" }} />}>
                     Profile
                 </Menu.Item>
-                {/* Ligne de séparation avec couleur blanche */}
                 <hr style={{ marginTop: '30px', borderColor: '#FFFFFF', borderWidth: '1px', opacity: 0.5 }} />
-                <Menu.Item key="3" style={{ marginTop: '30px' }} icon={<LogoutOutlined style={{ color: "orangered" }} />} onClick={handleLogout}>
+                <Menu.Item 
+                    key="3" 
+                    style={{ marginTop: '30px' }} 
+                    icon={<LogoutOutlined style={{ color: "orangered" }} />} 
+                    onClick={handleLogout}
+                >
                     Logout
                 </Menu.Item>
             </Menu>
@@ -56,11 +60,11 @@ const InstructorHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
     );
 };
 
-const App = () => {
+const InstructorApp = () => {
     const [collapsed, setCollapsed] = useState(false);
     const [selectedMenuItem, setSelectedMenuItem] = useState('1');
 
-    const handleSelectMenuItem = ({ item, key }) => {
+    const handleSelectMenuItem = ({ key }) => {
         setSelectedMenuItem(key);
     };
 
@@ -68,6 +72,7 @@ const App = () => {
         <Layout style={{ minHeight: '100vh' }}>
             <InstructorHome
                 collapsed={collapsed}
+                onCollapse={() => setCollapsed(!collapsed)}
                 onSelectMenuItem={handleSelectMenuItem}
             />
             <Layout>
@@ -103,7 +108,7 @@ const App = () => {
                         margin: 0,
                         fontWeight: 'bold',
                         flexGrow: 1,
-                        textAlign: 'center', // Centrer le texte
+                        textAlign: 'center',
                     }}>
                         SkillHub
                     </h4>
@@ -120,7 +125,6 @@ const App = () => {
                         }}
                         type="button"
                     >
-                        {/* Ajout de l'icône de notification */}
                         <BellOutlined
                             style={{
                                 fontWeight: "bold",
@@ -138,7 +142,7 @@ const App = () => {
                     background: 'white',
                     borderRadius: '8px',
                 }}>
-                    {selectedMenuItem === '1' && <InstructorAllCourses />}
+                    {selectedMenuItem === '1' && <InstructorCoursesList />}
                     {selectedMenuItem === '2' && <InstructorProfile />}
                 </Content>
             </Layout>
@@ -146,4 +150,4 @@ const App = () => {
     );
 };
 
-export default App;
+export default InstructorApp;

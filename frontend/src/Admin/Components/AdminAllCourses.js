@@ -46,7 +46,7 @@ const AdminAllCourses = () => {
 
     return (
         <div className="container mt-5">
-            <h1>Accepted Courses in System</h1>
+            <h1>All Courses in System</h1>
             <Spin spinning={loading}>
                 <div className="row mt-4">
                     {acceptedCourses.map(course => (

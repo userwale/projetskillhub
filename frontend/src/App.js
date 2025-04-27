@@ -1,40 +1,65 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
-import HoverRating from './components/feedback/muiFeedback.js'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import Login from "./Main/Login";
-import InstructorHome from "./Instructor/Pages/InstructorHome";
-import LearnerHome from "./Learner/Pages/LearnerHome";
-import AdminHome from "./Admin/Pages/AdminHome";
-import Signup from "./Main/Signup";
-import Home from "./Main/Home";
-import AdminSignup from "./Admin/Pages/AdminSignup"; 
 
-// Importation du composant AddCourse
-import AddCourse from './Instructor/Pages/InstructorAddCourses.js';  // Ajoute ce chemin si tu as un fichier AddCourse.js
+// Main Components
+import Home from "./Main/Home";
+import Login from "./Main/Login";
+import Signup from "./Main/Signup";
+import HoverRating from './components/feedback/muiFeedback';
+
+// Admin Components
+import AdminHome from "./Admin/Pages/AdminHome";
+import AdminAllInstructors from "./Admin/Components/AdminAllInstructors";
+import AdminAllStudents from "./Admin/Components/AdminAllStudents";
+
+// Learner Components
+import LearnerHome from "./Learner/Pages/LearnerHome";
+import LearnerMyCourses from "./Learner/Components/LearnerMyCourses";
+
+// Instructor Components
+import InstructorHome from "./Instructor/Pages/InstructorHome";
+import InstructorCoursesList from './Instructor/Pages/Courses/InstructorCoursesList';
+import AddCourse from './Instructor/Pages/Courses/AddCourse';
+import CourseDetails from './Instructor/Pages/Courses/CourseDetails';
+import AddCourseContent from './Instructor/Pages/Courses/AddCourseContent';
+import InstructorProfile from "./Instructor/Pages/InstructorProfile";
 
 function App() {
-    return (
-        <div className="App">
-            <Router>
-                <Routes>
-                    <Route path="/emoji" element={<HoverRating />} />
-                    <Route path="/" element={<Home />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/instructor/home" element={<InstructorHome />} />
-                    <Route path="/learner/home" element={<LearnerHome />} />
-                    <Route path="/admin/home" element={<AdminHome />} />
-                    <Route path="/feedback" element={<HoverRating />} />
-                    <Route path="/admin-signup" element={<AdminSignup />} />
+  return (
+    <div className="App">
+      <Router>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/feedback" element={<HoverRating />} />
 
-                    {/* Ajout de la route pour la page Ajouter un Cours */}
-                    <Route path="/add-course" element={<AddCourse />} />
-                </Routes>
-            </Router>
-        </div>
-    );
+          {/* Admin Routes */}
+          <Route path="/admin/home" element={<AdminHome />} />
+          <Route path="/admin/instructors" element={<AdminAllInstructors />} />
+          <Route path="/admin/students" element={<AdminAllStudents />} />
+
+          {/* Learner Routes */}
+          <Route path="/learner/home" element={<LearnerHome />} />
+          <Route path="/learner/my-courses" element={<LearnerMyCourses />} />
+
+          {/* Instructor Routes */}
+          <Route path="/instructor/home" element={<InstructorHome />} />
+          <Route path="/instructor/courses" element={<InstructorCoursesList />} />
+          <Route path="/instructor/courses/add" element={<AddCourse />} />
+          <Route path="/instructor/courses/:courseId" element={<CourseDetails />} />
+          <Route path="/instructor/courses/:courseId/add-content" element={<AddCourseContent />} />
+          <Route path="/instructor/profile" element={<InstructorProfile />} />
+
+          {/* Fallback Route */}
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </Router>
+    </div>
+  );
 }
 
 export default App;
