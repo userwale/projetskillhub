@@ -18,7 +18,7 @@ router.get('/:instructorId/courses', auth.authenticate, instructorController.get
 router.get('/courses/:courseId', instructorController.getCourseById);
 router.get('/courses', instructorController.getAllCourses);
 router.delete('/courses/:courseId', auth.authenticate, instructorController.deleteCourse);
-router.post('/courses/:courseId/add-content', auth.authenticate, upload.single('file'), instructorController.addCourseContent);
+router.post('/courses/:courseId/add-content', auth.authenticate, upload, instructorController.addCourseContent);
 router.put('/courses/:courseId', auth.authenticate, instructorController.updateCourse);
 // Suppression de cours par l'administrateur
 router.delete('/admin/courses/:courseId', auth.authenticate, instructorController.adminDeleteCourse);
@@ -30,7 +30,7 @@ router.delete('/:instructorId', auth.authenticate, instructorController.deleteIn
 router.post('/instructor', auth.authenticate, instructorController.createInstructor);
 
 // Upload files (autres fichiers indépendants)
-router.post('/uploads', auth.authenticate, upload.single('file'), (req, res) => {
+router.post('/uploads', auth.authenticate, upload, (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, message: 'No file uploaded or invalid type' });
     }
