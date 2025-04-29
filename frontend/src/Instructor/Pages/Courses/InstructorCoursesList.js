@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Modal, Spin, Row, Col, message, Popconfirm } from 'antd';
+import { Card, Button, Modal, Spin, Row, Col, message, Popconfirm, List, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
+const { Text } = Typography;
 
 const DESCRIPTION_PREVIEW_LIMIT = 120;
 
@@ -18,6 +20,7 @@ const InstructorCoursesList = () => {
 
     const fetchCourses = async () => {
         try {
+            setLoading(true);
             const token = localStorage.getItem('token');
             const user = JSON.parse(localStorage.getItem('user'));
 
@@ -29,11 +32,27 @@ const InstructorCoursesList = () => {
 
             const res = await axios.get(
                 `http://localhost:8072/api/instructor/${user._id}/courses`,
-                { headers: { Authorization: `Bearer ${token}` } }
+                { 
+                    headers: { Authorization: `Bearer ${token}` } 
+                }
             );
 
-            setCourses(res.data);
+            // Transform URLs to absolute if they aren't already
+            const coursesWithFullUrls = res.data.map(course => {
+                if (course.content) {
+                    course.content = course.content.map(item => {
+                        if (item.url && !item.url.startsWith('http')) {
+                            item.url = `http://localhost:8072${item.url}`;
+                        }
+                        return item;
+                    });
+                }
+                return course;
+            });
+
+            setCourses(coursesWithFullUrls);
         } catch (error) {
+            console.error('Failed to fetch courses:', error);
             message.error('Failed to fetch courses');
         } finally {
             setLoading(false);
@@ -53,13 +72,17 @@ const InstructorCoursesList = () => {
     const handleDelete = async (courseId) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:8072/api/instructor/courses/${courseId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await axios.delete(
+                `http://localhost:8072/api/instructor/courses/${courseId}`, 
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
 
             message.success('Course deleted successfully');
             fetchCourses(); // Refresh list
         } catch (error) {
+            console.error('Failed to delete course:', error);
             message.error('Failed to delete course');
         }
     };
@@ -77,7 +100,7 @@ const InstructorCoursesList = () => {
             <h1>Your Courses</h1>
 
             {loading ? (
-                <Spin />
+                <Spin size="large" />
             ) : (
                 <Row gutter={[16, 16]}>
                     {courses.map((course) => {
@@ -87,44 +110,53 @@ const InstructorCoursesList = () => {
                             : course.description;
 
                         return (
-                            <Col key={course._id} xs={24} sm={12} md={8}>
+                            <Col key={course._id} xs={24} sm={12} md={8} lg={6}>
                                 <Card
                                     title={course.title}
                                     style={{
-                                        height: 420,
-                                        width: 300,
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
+                                    bodyStyle={{
+                                        flex: 1,
                                         display: 'flex',
                                         flexDirection: 'column',
                                         justifyContent: 'space-between'
                                     }}
-                                    bodyStyle={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        justifyContent: 'space-between',
-                                        height: '100%',
-                                        padding: 16
-                                    }}
                                 >
-                                    <div style={{ flex: 1 }}>
-                                        <p style={{
-                                            display: '-webkit-box',
-                                            WebkitLineClamp: 4,
-                                            WebkitBoxOrient: 'vertical',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            marginBottom: 8
-                                        }}>
-                                            {preview}
-                                        </p>
-                                        {isLong && (
-                                            <Button type="link" onClick={() => showDetails(course)} style={{ padding: 0 }}>
-                                                Read More
-                                            </Button>
-                                        )}
+                                    <div>
+                                        <Text strong>Category: </Text>
+                                        <Text>{course.category}</Text>
+                                        
+                                        <div style={{ margin: '8px 0' }}>
+                                            <Text strong>Description: </Text>
+                                            <p style={{
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 3,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                marginBottom: 8
+                                            }}>
+                                                {preview}
+                                            </p>
+                                            {isLong && (
+                                                <Button 
+                                                    type="link" 
+                                                    onClick={() => showDetails(course)} 
+                                                    style={{ padding: 0 }}
+                                                >
+                                                    Read More
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        <Text strong>Content Items: </Text>
+                                        <Text>{course.content?.length || 0}</Text>
                                     </div>
 
-                                    <div>
-                                        <p><strong>Content Items:</strong> {course.content?.length || 0}</p>
+                                    <div style={{ marginTop: 16 }}>
                                         <Button
                                             onClick={() => navigate(`/instructor/courses/${course._id}/add-content`)}
                                             style={{ width: '100%', marginBottom: 8 }}
@@ -143,7 +175,10 @@ const InstructorCoursesList = () => {
                                             okText="Yes"
                                             cancelText="No"
                                         >
-                                            <Button danger style={{ width: '100%', marginBottom: 8 }}>
+                                            <Button 
+                                                danger 
+                                                style={{ width: '100%', marginBottom: 8 }}
+                                            >
                                                 Delete Course
                                             </Button>
                                         </Popconfirm>
@@ -161,23 +196,67 @@ const InstructorCoursesList = () => {
                 </Row>
             )}
 
+            {/* Course Details Modal */}
             <Modal
                 title={selectedCourse?.title}
                 open={isModalVisible}
                 onCancel={closeModal}
-                footer={<Button onClick={closeModal}>Close</Button>}
-                width={600}
-                bodyStyle={{ maxHeight: 400, overflowY: 'auto' }}
+                footer={[
+                    <Button key="close" onClick={closeModal}>
+                        Close
+                    </Button>
+                ]}
+                width={800}
             >
-                <p><strong>Description:</strong> {selectedCourse?.description}</p>
-                <p><strong>Category:</strong> {selectedCourse?.category}</p>
-                <p><strong>Created At:</strong> {new Date(selectedCourse?.createdAt).toLocaleDateString()}</p>
-                <h4>Content Items:</h4>
-                <ul>
-                    {selectedCourse?.content?.map((item, index) => (
-                        <li key={index}>{item.title} ({item.type})</li>
-                    )) || <li>No content</li>}
-                </ul>
+                <div style={{ marginBottom: 16 }}>
+                    <Text strong>Category: </Text>
+                    <Text>{selectedCourse?.category}</Text>
+                </div>
+                
+                <div style={{ marginBottom: 16 }}>
+                    <Text strong>Description: </Text>
+                    <Text>{selectedCourse?.description}</Text>
+                </div>
+                
+                <div style={{ marginBottom: 16 }}>
+                    <Text strong>Created At: </Text>
+                    <Text>{selectedCourse?.createdAt ? new Date(selectedCourse.createdAt).toLocaleDateString() : 'N/A'}</Text>
+                </div>
+                
+                <div>
+                    <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                        Content Items ({selectedCourse?.content?.length || 0}):
+                    </Text>
+                    
+                    {selectedCourse?.content?.length > 0 ? (
+                        <List
+                            dataSource={selectedCourse.content}
+                            renderItem={(item) => (
+                                <List.Item
+                                    actions={[
+                                        item.url && (
+                                            <Button 
+                                                type="link" 
+                                                href={item.url} 
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                View File
+                                            </Button>
+                                        )
+                                    ]}
+                                >
+                                    <List.Item.Meta
+                                        title={item.title}
+                                        description={`Type: ${item.doc_type}`}
+                                    />
+                                </List.Item>
+                            )}
+                        />
+                    ) : (
+                        <Text type="secondary">No content available</Text>
+                    )}
+                </div>
             </Modal>
         </div>
     );

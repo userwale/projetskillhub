@@ -115,7 +115,14 @@ export default function AdminCoursesReq() {
                                     <Card
                                         title={course.title}
                                         style={{ width: '100%', minHeight: '250px' }}
-                                        bodyStyle={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}
+                                        styles={{
+                                            body: {
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                justifyContent: 'space-between',
+                                                height: '100%'
+                                            }
+                                        }}
                                     >
                                         <div>
                                             <p style={{ wordWrap: 'break-word' }}>{displayedDescription}</p>
@@ -127,8 +134,8 @@ export default function AdminCoursesReq() {
                                         </div>
                                         <div>
                                             <p><strong>Instructor:</strong> {course.instructor?.name || 'Unknown'}</p>
-                                            <Button 
-                                                onClick={() => showCourseDetails(course)} 
+                                            <Button
+                                                onClick={() => showCourseDetails(course)}
                                                 type="primary"
                                             >
                                                 View Details
@@ -146,22 +153,23 @@ export default function AdminCoursesReq() {
                     open={isModalOpen}
                     onCancel={handleModalClose}
                     width={800}
-                    style={{ maxHeight: '80vh' }}
-                    bodyStyle={{ 
-                        overflowY: 'auto',
-                        padding: '24px'
+                    styles={{
+                        body: {
+                            overflowY: 'auto',
+                            padding: '24px'
+                        }
                     }}
                     footer={[
                         <Button key="close" onClick={handleModalClose}>
                             Close
                         </Button>,
-                        <Button 
-                            key="delete" 
-                            danger 
+                        <Button
+                            key="delete"
+                            danger
                             onClick={() => {
                                 form.validateFields()
                                     .then(() => handleDeleteCourse())
-                                    .catch(() => {});
+                                    .catch(() => { });
                             }}
                         >
                             Delete Course
@@ -174,18 +182,21 @@ export default function AdminCoursesReq() {
                             <p style={{ marginBottom: 16 }}><strong>Description:</strong> {selectedCourse.description}</p>
                             <p style={{ marginBottom: 16 }}><strong>Category:</strong> {selectedCourse.category}</p>
                             <p style={{ marginBottom: 16 }}><strong>Instructor:</strong> {selectedCourse.instructor?.name} ({selectedCourse.instructor?.email})</p>
-                            
+
                             <h5 style={{ marginBottom: 16 }}><strong>Content:</strong></h5>
                             {selectedCourse.content && selectedCourse.content.length > 0 ? (
                                 <ul style={{ marginBottom: 16 }}>
                                     {selectedCourse.content.map((item, index) => (
                                         <li key={index} style={{ marginBottom: 8 }}>
                                             {item.title} ({item.type}) -
-                                            <a 
-                                                href={item.filePath} 
-                                                target="_blank" 
+                                            <a
+                                                href={
+                                                    item.url.startsWith('http')
+                                                        ? item.url
+                                                        : `http://localhost:8072/${item.url.startsWith('/') ? item.url.slice(1) : item.url}`
+                                                }
+                                                target="_blank"
                                                 rel="noopener noreferrer"
-                                                style={{ marginLeft: 8 }}
                                             >
                                                 View
                                             </a>
@@ -205,23 +216,23 @@ export default function AdminCoursesReq() {
                                     name="reason"
                                     label="Reason for deletion"
                                     rules={[
-                                        { 
-                                            required: true, 
-                                            message: 'Please provide a reason' 
+                                        {
+                                            required: true,
+                                            message: 'Please provide a reason'
                                         },
-                                        { 
-                                            min: 10, 
-                                            message: 'Reason must be at least 10 characters' 
+                                        {
+                                            min: 10,
+                                            message: 'Reason must be at least 10 characters'
                                         }
                                     ]}
                                 >
-                                    <TextArea 
+                                    <TextArea
                                         rows={4}
-                                        style={{ 
+                                        style={{
                                             wordBreak: 'break-word',
                                             whiteSpace: 'pre-wrap'
                                         }}
-                                        placeholder="Explain why this course is being deleted..." 
+                                        placeholder="Explain why this course is being deleted..."
                                     />
                                 </Form.Item>
                             </Form>

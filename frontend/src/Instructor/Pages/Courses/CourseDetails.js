@@ -136,14 +136,18 @@ const CourseDetails = () => {
                         dataSource={course.content}
                         renderItem={item => (
                             <List.Item>
-                                {item.title} - {item.type}
-                                <Button 
-                                    type="link" 
-                                    href={item.filePath} 
-                                    target="_blank"
-                                >
-                                    View
-                                </Button>
+                                <div style={{ flex: 1 }}>
+                                    <strong>{item.title}</strong> ({item.doc_type})
+                                </div>
+                                {item.url && (
+                                    <Button 
+                                        type="link" 
+                                        href={item.url} 
+                                        target="_blank"
+                                    >
+                                        View
+                                    </Button>
+                                )}
                             </List.Item>
                         )}
                     />
@@ -155,7 +159,7 @@ const CourseDetails = () => {
             {/* Edit Course Modal */}
             <Modal
                 title="Edit Course Details"
-                visible={editModalVisible}
+                open={editModalVisible}
                 onCancel={() => setEditModalVisible(false)}
                 onOk={() => form.submit()}
                 confirmLoading={loading}
@@ -194,7 +198,7 @@ const CourseDetails = () => {
             {/* Delete Confirmation Modal */}
             <Modal
                 title="Confirm Delete"
-                visible={deleteModalVisible}
+                open={deleteModalVisible}
                 onCancel={() => setDeleteModalVisible(false)}
                 onOk={handleDeleteCourse}
                 confirmLoading={loading}

@@ -138,6 +138,7 @@ exports.addNewCourse = async (req, res) => {
     }
 };
 
+// Modifier la fonction addCourseContent
 exports.addCourseContent = async (req, res) => {
     try {
       if (!req.file) {
@@ -148,32 +149,36 @@ exports.addCourseContent = async (req, res) => {
       }
   
       const { courseId } = req.params;
-      const { title, type } = req.body;
+      const { title } = req.body;
       
       const course = await Course.findById(courseId);
       if (!course) {
+        fs.unlinkSync(req.file.path);
         return res.status(404).json({
           success: false,
           message: 'Course not found'
         });
       }
   
-      // Vérification de l'instructeur
       if (course.instructor.toString() !== req.user.id) {
+        fs.unlinkSync(req.file.path);
         return res.status(403).json({
           success: false,
           message: 'Unauthorized'
         });
       }
   
-      // Création du chemin relatif
-      const filePath = req.file.path.replace(/\\/g, '/').split('uploads/')[1];
-      const url = `/uploads/${filePath}`;
+      // Déterminer le type de contenu
+      const isVideo = req.file.mimetype.startsWith('video');
+      const fileType = isVideo ? 'video' : 'file';
+      const subFolder = isVideo ? 'videos' : 'files';
   
       const newContent = {
         title,
-        doc_type: type,
-        url,
+        doc_type: fileType,
+        url: `/uploads/${subFolder}/${req.file.filename}`,
+        fileType: req.file.mimetype,
+        originalName: req.file.originalname,
         completed: false
       };
   
@@ -188,17 +193,41 @@ exports.addCourseContent = async (req, res) => {
   
     } catch (error) {
       console.error('Error:', error);
-      
-      // Supprimer le fichier uploadé en cas d'erreur
-      if (req.file) {
-        fs.unlink(req.file.path, () => {});
-      }
-  
+      if (req.file) fs.unlinkSync(req.file.path);
       res.status(500).json({
         success: false,
         message: 'Internal server error',
         error: error.message
       });
+    }
+  };
+  
+  // Modifier getCourseById pour inclure les URLs complètes
+  exports.getCourseById = async (req, res) => {
+    try {
+      const course = await Course.findById(req.params.courseId);
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+  
+      // Transformer les URLs si nécessaire
+      const transformedContent = course.content.map(item => {
+        if (item.url && !item.url.startsWith('http')) {
+          return {
+            ...item.toObject(),
+            url: `${req.protocol}://${req.get('host')}${item.url}`
+          };
+        }
+        return item;
+      });
+  
+      res.status(200).json({
+        ...course.toObject(),
+        content: transformedContent
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Internal Server Error' });
     }
   };
 exports.getAllCoursesByInstructorId = async (req, res) => {
