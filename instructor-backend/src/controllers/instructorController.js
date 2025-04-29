@@ -43,12 +43,22 @@ exports.loginInstructor = async (req, res) => {
         }
 
         const token = generateToken(instructor);
-        res.status(200).json({ token, id: instructor._id });
+
+        // Assurez-vous que _id est bien inclus
+        const { password, ...instructorData } = instructor.toObject();
+        res.status(200).json({ 
+            token, 
+            user: {
+                ...instructorData,
+                _id: instructor._id // Explicitement inclus au cas où
+            } 
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
 
 // Profil
 exports.viewInstructorProfile = async (req, res) => {
@@ -105,82 +115,100 @@ exports.addNewCourse = async (req, res) => {
             title,
             description,
             category,
-            instructor: instructorId
+            instructor: instructorId,
         });
 
         const savedCourse = await newCourse.save();
+
+        // Vérification que l'update a bien fonctionné
+        const updatedInstructor = await Instructor.findByIdAndUpdate(
+            instructorId,
+            { $push: { courses: savedCourse._id } },
+            { new: true }
+        );
+
+        if (!updatedInstructor) {
+            console.error('Instructor not found during course addition');
+        }
+
         res.status(201).json(savedCourse);
     } catch (err) {
-        console.error(err);
+        console.error('Error in addNewCourse:', err);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
 exports.addCourseContent = async (req, res) => {
     try {
-      const { courseId } = req.params;
-      const { title, type } = req.body;
-      const file = req.file;
-  
-      if (!file) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'No file uploaded' 
-        });
-      }
-  
-      // Validate course exists (pseudo-code)
-      const course = await Course.findById(courseId);
-      if (!course) {
-        return res.status(404).json({
-          success: false,
-          message: 'Course not found'
-        });
-      }
-  
-      // Save to database (example)
-      const newContent = new CourseContent({
-        courseId,
-        title,
-        type,
-        filePath: `/uploads/${file.filename}`,
-        instructorId: req.user.id,
-        createdAt: new Date()
-      });
-  
-      await newContent.save();
-  
-      res.status(201).json({
-        success: true,
-        message: 'Content added successfully',
-        content: {
-          id: newContent._id,
-          title: newContent.title,
-          type: newContent.type,
-          fileUrl: newContent.filePath
+        const { courseId } = req.params;
+        const { title, type } = req.body;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No file uploaded'
+            });
         }
-      });
-  
+
+        // Validate course exists (pseudo-code)
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: 'Course not found'
+            });
+        }
+
+        // Save to database (example)
+        const newContent = new CourseContent({
+            courseId,
+            title,
+            type,
+            filePath: `/uploads/${file.filename}`,
+            instructorId: req.user.id,
+            createdAt: new Date()
+        });
+
+        await newContent.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Content added successfully',
+            content: {
+                id: newContent._id,
+                title: newContent.title,
+                type: newContent.type,
+                fileUrl: newContent.filePath
+            }
+        });
+
     } catch (error) {
-      console.error('Error adding content:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Internal server error',
-        error: error.message 
-      });
+        console.error('Error adding content:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
     }
-  };
+};
 
 exports.getAllCoursesByInstructorId = async (req, res) => {
     try {
-        const courses = await Course.find({ instructor: req.params.instructorId }).populate('instructor', 'name email');
+        // Option 1: Get courses directly from Course collection
+        const courses = await Course.find({ instructor: req.params.instructorId })
+            .populate('instructor', 'name email');
+
+        // Option 2: Get courses through Instructor population
+        // const instructor = await Instructor.findById(req.params.instructorId).populate('courses');
+        // const courses = instructor.courses;
+
         res.status(200).json(courses);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
-
 exports.getCourseById = async (req, res) => {
     try {
         const course = await Course.findById(req.params.courseId);
@@ -196,7 +224,7 @@ exports.getCourseById = async (req, res) => {
 
 exports.getAllCourses = async (req, res) => {
     try {
-        const courses = await Course.find();
+        const courses = await Course.find().populate('instructor', 'name email title');
         res.status(200).json(courses);
     } catch (err) {
         console.error(err);

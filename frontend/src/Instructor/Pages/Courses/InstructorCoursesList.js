@@ -15,13 +15,41 @@ const InstructorCoursesList = () => {
 
     const fetchCourses = async () => {
         try {
-            const instructorId = localStorage.getItem('instructorId');
-            const res = await axios.get(`http://localhost:8072/api/instructor/${instructorId}/courses`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const token = localStorage.getItem('token');
+            const userString = localStorage.getItem('user');
+            
+            if (!token || !userString) {
+                message.error('Authentication required. Please login again.');
+                navigate('/instructor/login');
+                return;
+            }
+    
+            const user = JSON.parse(userString);
+            
+            if (!user?._id) {
+                message.error('Invalid user data. Please login again.');
+                console.log('User data from localStorage:', user); // Pour le débogage
+                navigate('/instructor/login');
+                return;
+            }
+    
+            const res = await axios.get(
+                `http://localhost:8072/api/instructor/${user._id}/courses`, 
+                {
+                    headers: { 
+                        Authorization: `Bearer ${token}` 
+                    }
+                }
+            );
             setCourses(res.data);
         } catch (err) {
-            message.error('Failed to fetch courses');
+            if (err.response?.status === 401) {
+                message.error('Session expired. Please login again.');
+                navigate('/instructor/login');
+            } else {
+                message.error('Failed to fetch courses');
+                console.error(err);
+            }
         } finally {
             setLoading(false);
         }

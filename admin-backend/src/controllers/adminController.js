@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const Admin = require('../models/adminModel');
 
-
 dotenv.config();
 
 // Method to verify activation key
@@ -198,18 +197,36 @@ exports.adminLogin = async (req, res) => {
     }
 };
 
-// Existing methods enhanced with error handling and security
+
 exports.getAllCourses = async (req, res) => {
     try {
+        // Appel à l'API de l'instructeur pour récupérer les cours
         const response = await axios.get('http://localhost:8072/api/instructor/courses', {
             headers: {
                 'Authorization': req.headers.authorization
             }
         });
-        res.status(200).json({
-            success: true,
-            data: response.data
-        });
+
+        // Si la réponse contient les données des cours avec l'instructeur
+        if (response.data && response.data.length > 0) {
+            // Traitement pour ajouter des informations supplémentaires si nécessaire
+            const coursesWithInstructor = response.data.map(course => {
+                return {
+                    ...course,
+                    instructor: course.instructor || {}  // Si l'instructeur n'est pas directement dans la réponse, ajoute une valeur par défaut
+                };
+            });
+
+            res.status(200).json({
+                success: true,
+                data: coursesWithInstructor
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: 'No courses found'
+            });
+        }
     } catch (error) {
         console.error('Error fetching courses:', error);
         const status = error.response?.status || 500;
@@ -220,6 +237,7 @@ exports.getAllCourses = async (req, res) => {
         });
     }
 };
+
 
 exports.getAllStudents = async (req, res) => {
     try {
@@ -423,11 +441,14 @@ exports.deleteCourse = async (req, res) => {
     try {
         const { courseId } = req.params;
 
-        await axios.delete(`http://localhost:8072/api/instructor/course/${courseId}`, {
-            headers: {
-                'Authorization': req.headers.authorization
-            }
-        });
+        const course = await Course.findByIdAndDelete(courseId);
+
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: 'Course not found'
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -435,14 +456,13 @@ exports.deleteCourse = async (req, res) => {
         });
     } catch (error) {
         console.error('Error deleting course:', error);
-        const status = error.response?.status || 500;
-        const message = error.response?.data?.message || 'Failed to delete course';
-        res.status(status).json({
+        res.status(500).json({
             success: false,
-            message
+            message: 'Failed to delete course'
         });
     }
 };
+
 exports.deleteLearner = async (req, res) => {
     try {
         const { learnerId } = req.params;

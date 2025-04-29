@@ -11,12 +11,17 @@ const CourseSchema = new Schema({
         type: String,
         required: true,
     },
+    category: {
+        type: String,
+        required: true,
+        trim: true,
+    },    
     content: [{
         title: String,
         doc_type: String,
         url: {
             type: String,
-            match: [/^https?:\/\/.+$/, 'Invalid URL format']  // URL validation regex
+            match: [/^https?:\/\/.+$/, 'Invalid URL format']  
         },
         completed: {
             type: Boolean,
@@ -25,8 +30,9 @@ const CourseSchema = new Schema({
     }],
     instructor: {
         type: Schema.Types.ObjectId,
-        ref: 'Instructor'
-    },
+        ref: 'Instructor',
+        required: true
+    }
 });
 
 module.exports = mongoose.model('Course', CourseSchema);

@@ -1,7 +1,7 @@
-import React, {useState} from 'react';
-import {Button, Card, Checkbox, Col, Form, Input, message, Row} from 'antd';
-import {Container} from 'react-bootstrap';
-import {useNavigate} from 'react-router-dom';
+import React, { useState } from 'react';
+import { Button, Card, Checkbox, Col, Form, Input, message, Row } from 'antd';
+import { Container } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 const InstructorLogin = () => {
     const [loading, setLoading] = useState(false);
@@ -23,56 +23,59 @@ const InstructorLogin = () => {
             }
 
             const data = await response.json();
-            const {token, id} = data;
-
+            const { token, user } = data;
+            if (!user?._id) {
+                throw new Error('User data incomplete');
+            }
             localStorage.setItem('token', token);
-            localStorage.setItem('instructorId', id);
+            localStorage.setItem('user', JSON.stringify(user));            
+            localStorage.setItem('instructorId', user._id);
 
             setLoading(false);
-            console.log('Login successful!');
+            console.log('Login successful!', user);
             message.success('Login successful!');
             navigate('/instructor/home');
+
         } catch (error) {
             setLoading(false);
             console.error('Error:', error.message);
             message.error('Login failed. Please check your credentials and try again.');
         }
     };
-
     const onFinishFailed = (errorInfo) => {
         console.log('Failed:', errorInfo);
     };
 
     return (
-        <Container style={{minHeight: '100vh'}}>
-            <Row justify="center" align="middle" style={{height: '100%'}}>
+        <Container style={{ minHeight: '100vh' }}>
+            <Row justify="center" align="middle" style={{ height: '100%' }}>
                 <Col xs={24} sm={20} md={16} lg={12} xl={8}>
                     <center>
-                        <Card style={{fontFamily: "revert", fontSize: '30px', color: 'cadetblue'}}>Instructor
-                        Login
+                        <Card style={{ fontFamily: "revert", fontSize: '30px', color: 'cadetblue' }}>Instructor
+                            Login
                         </Card>
                     </center>
-                    <Card style={{borderRadius: '10px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'}}>
+                    <Card style={{ borderRadius: '10px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
                         <Form
                             name="basic"
-                            initialValues={{remember: true}}
+                            initialValues={{ remember: true }}
                             onFinish={onFinish}
                             onFinishFailed={onFinishFailed}
                         >
                             <Form.Item
                                 label="Email"
                                 name="email"
-                                rules={[{required: true, message: 'Please input your email!'}]}
+                                rules={[{ required: true, message: 'Please input your email!' }]}
                             >
-                                <Input/>
+                                <Input />
                             </Form.Item>
 
                             <Form.Item
                                 label="Password"
                                 name="password"
-                                rules={[{required: true, message: 'Please input your password!'}]}
+                                rules={[{ required: true, message: 'Please input your password!' }]}
                             >
-                                <Input.Password/>
+                                <Input.Password />
                             </Form.Item>
 
                             <Form.Item name="remember" valuePropName="checked">
@@ -81,7 +84,7 @@ const InstructorLogin = () => {
 
                             <Form.Item>
                                 <Button type="primary" className="btn-success" htmlType="submit" loading={loading}
-                                        style={{width: '100%'}}>
+                                    style={{ width: '100%' }}>
                                     Login
                                 </Button>
                             </Form.Item>

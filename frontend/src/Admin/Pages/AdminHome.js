@@ -10,7 +10,6 @@ import {
     TeamOutlined
 } from '@ant-design/icons';
 import { useNavigate } from "react-router-dom";
-import AdminAllCourses from "../Components/AdminAllCourses";
 import AdminCoursesReq from "../Components/AdminCoursesReq";
 import AdminProfile from "../Components/AdminProfile";
 import AdminAllStudents from "../Components/AdminAllStudents";
@@ -45,22 +44,19 @@ const AdminHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
                 style={{ background: '#334155', color: 'white' }} // Fond sombre pour le menu et texte blanc
             >
                 <Menu.Item key="1" icon={<HomeOutlined style={{ color: "white" }} />}>
-                    Course Requests
-                </Menu.Item>
-                <Menu.Item key="2" icon={<BookOutlined style={{ color: "white" }} />}>
                     All Courses
                 </Menu.Item>
-                <Menu.Item key="3" icon={<TeamOutlined style={{ color: "white" }} />}>
+                <Menu.Item key="2" icon={<TeamOutlined style={{ color: "white" }} />}>
                     All Students
                 </Menu.Item>
-                <Menu.Item key="4" icon={<TeamOutlined style={{ color: "white" }} />}>
+                <Menu.Item key="3" icon={<TeamOutlined style={{ color: "white" }} />}>
                     All Instructors
                 </Menu.Item>
-                <Menu.Item key="5" icon={<UserOutlined style={{ color: "white" }} />}>
+                <Menu.Item key="4" icon={<UserOutlined style={{ color: "white" }} />}>
                     Profile
                 </Menu.Item>
                 <Menu.Divider style={{ borderColor: 'white' }} /> {/* Ligne de séparation blanche */}
-                <Menu.Item key="6" icon={<LogoutOutlined style={{ color: "orangered" }} />} onClick={handleLogout}>
+                <Menu.Item key="5" icon={<LogoutOutlined style={{ color: "orangered" }} />} onClick={handleLogout}>
                     Logout
                 </Menu.Item>
             </Menu>
@@ -105,10 +101,9 @@ const App = () => {
                 </Header>
                 <Content style={{ margin: '24px 16px', padding: 24, minHeight: 280 }}>
                     {selectedMenuItem === '1' && <AdminCoursesReq />}
-                    {selectedMenuItem === '2' && <AdminAllCourses />}
-                    {selectedMenuItem === '3' && <AdminAllStudents />}
-                    {selectedMenuItem === '4' && <AdminAllInstructors />}
-                    {selectedMenuItem === '5' && <AdminProfile />}
+                    {selectedMenuItem === '2' && <AdminAllStudents />}
+                    {selectedMenuItem === '3' && <AdminAllInstructors />}
+                    {selectedMenuItem === '4' && <AdminProfile />}
                 </Content>
             </Layout>
         </Layout>

@@ -19,12 +19,11 @@ exports.comparePassword = async (password, hashedPassword) => {
 
 exports.generateToken = (user) => {
     const payload = {
-        id: user._id,
+        id: user._id, // Doit correspondre à l'ID dans la base
         username: user.email,
-        role: user.userType
+        role: user.userType || 'instructor'
     };
-    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '6h' });
-    return token;
+    return jwt.sign(payload, SECRET_KEY, { expiresIn: '6h' });
 };
 
 exports.verifyToken = (token) => {
