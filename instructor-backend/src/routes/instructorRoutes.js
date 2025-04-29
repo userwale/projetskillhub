@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const instructorController = require('../controllers/instructorController');
 const upload = require('../middleware/upload'); 
+const fs = require('fs');
 
 // Auth routes
 router.post('/signup', instructorController.signupInstructor);

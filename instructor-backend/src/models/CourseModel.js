@@ -21,7 +21,7 @@ const CourseSchema = new Schema({
         doc_type: String,
         url: {
             type: String,
-            match: [/^https?:\/\/.+$/, 'Invalid URL format']  
+            match: [/^(https?:\/\/.+|\/.+)$/, 'Invalid URL format']
         },
         completed: {
             type: Boolean,
