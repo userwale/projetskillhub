@@ -56,9 +56,7 @@ const AddCourse = () => {
                         <Select.Option value="finance">Finance</Select.Option>
                         <Select.Option value="photography">Photography</Select.Option>
                         <Select.Option value="music">Music</Select.Option>
-                        <Select.Option value="health">Health & Fitness</Select.Option>
-                        <Select.Option value="personal-development">Personal Development</Select.Option>
-                        <Select.Option value="language">Language Learning</Select.Option>
+                        <Select.Option value="language">Machine Learning</Select.Option>
                         <Select.Option value="science">Science</Select.Option>
                         <Select.Option value="engineering">Engineering</Select.Option>
                         <Select.Option value="art">Art</Select.Option>

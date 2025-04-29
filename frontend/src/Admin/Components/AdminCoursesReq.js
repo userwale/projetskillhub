@@ -9,8 +9,8 @@ export default function AdminCoursesReq() {
     const [loading, setLoading] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [deleteReason, setDeleteReason] = useState('');
     const [form] = Form.useForm();
+    const [expandedCourses, setExpandedCourses] = useState({});
 
     useEffect(() => {
         fetchAllCourses();
@@ -46,6 +46,13 @@ export default function AdminCoursesReq() {
         }
     };
 
+    const toggleExpand = (courseId) => {
+        setExpandedCourses(prev => ({
+            ...prev,
+            [courseId]: !prev[courseId]
+        }));
+    };
+
     const showCourseDetails = (course) => {
         setSelectedCourse(course);
         setIsModalOpen(true);
@@ -66,7 +73,7 @@ export default function AdminCoursesReq() {
             }
 
             const response = await fetch(
-                `http://localhost:8071/api/admin/course/${selectedCourse._id}`,
+                `http://localhost:8071/api/admin/courses/${selectedCourse._id}`,
                 {
                     method: 'DELETE',
                     headers: {
@@ -96,23 +103,41 @@ export default function AdminCoursesReq() {
                 <h1>All Courses in System</h1>
                 <Spin spinning={loading}>
                     <div className="row mt-4">
-                        {courses.map(course => (
-                            <div key={course._id} className="col-md-4 mb-4">
-                                <Card
-                                    title={course.title}
-                                    style={{ width: '100%' }}
-                                >
-                                    <p>{course.description}</p>
-                                    <p><strong>Instructor:</strong> {course.instructor?.name || 'Unknown'}</p>
-                                    <Button 
-                                        onClick={() => showCourseDetails(course)} 
-                                        type="primary"
+                        {courses.map(course => {
+                            const isExpanded = expandedCourses[course._id];
+                            const shouldTruncate = course.description && course.description.length > 120;
+                            const displayedDescription = shouldTruncate && !isExpanded
+                                ? course.description.slice(0, 120) + '...'
+                                : course.description;
+
+                            return (
+                                <div key={course._id} className="col-md-4 mb-4">
+                                    <Card
+                                        title={course.title}
+                                        style={{ width: '100%', minHeight: '250px' }}
+                                        bodyStyle={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}
                                     >
-                                        View Details
-                                    </Button>
-                                </Card>
-                            </div>
-                        ))}
+                                        <div>
+                                            <p style={{ wordWrap: 'break-word' }}>{displayedDescription}</p>
+                                            {shouldTruncate && (
+                                                <Button type="link" onClick={() => toggleExpand(course._id)}>
+                                                    {isExpanded ? 'Show less' : 'Read more'}
+                                                </Button>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p><strong>Instructor:</strong> {course.instructor?.name || 'Unknown'}</p>
+                                            <Button 
+                                                onClick={() => showCourseDetails(course)} 
+                                                type="primary"
+                                            >
+                                                View Details
+                                            </Button>
+                                        </div>
+                                    </Card>
+                                </div>
+                            );
+                        })}
                     </div>
                 </Spin>
 
@@ -121,6 +146,11 @@ export default function AdminCoursesReq() {
                     open={isModalOpen}
                     onCancel={handleModalClose}
                     width={800}
+                    style={{ maxHeight: '80vh' }}
+                    bodyStyle={{ 
+                        overflowY: 'auto',
+                        padding: '24px'
+                    }}
                     footer={[
                         <Button key="close" onClick={handleModalClose}>
                             Close
@@ -139,17 +169,17 @@ export default function AdminCoursesReq() {
                     ]}
                 >
                     {selectedCourse && (
-                        <div>
-                            <p><strong>Title:</strong> {selectedCourse.title}</p>
-                            <p><strong>Description:</strong> {selectedCourse.description}</p>
-                            <p><strong>Category:</strong> {selectedCourse.category}</p>
-                            <p><strong>Instructor:</strong> {selectedCourse.instructor?.name} ({selectedCourse.instructor?.email})</p>
+                        <div style={{ wordWrap: 'break-word' }}>
+                            <p style={{ marginBottom: 16 }}><strong>Title:</strong> {selectedCourse.title}</p>
+                            <p style={{ marginBottom: 16 }}><strong>Description:</strong> {selectedCourse.description}</p>
+                            <p style={{ marginBottom: 16 }}><strong>Category:</strong> {selectedCourse.category}</p>
+                            <p style={{ marginBottom: 16 }}><strong>Instructor:</strong> {selectedCourse.instructor?.name} ({selectedCourse.instructor?.email})</p>
                             
-                            <h5><strong>Content:</strong></h5>
+                            <h5 style={{ marginBottom: 16 }}><strong>Content:</strong></h5>
                             {selectedCourse.content && selectedCourse.content.length > 0 ? (
-                                <ul>
+                                <ul style={{ marginBottom: 16 }}>
                                     {selectedCourse.content.map((item, index) => (
-                                        <li key={index}>
+                                        <li key={index} style={{ marginBottom: 8 }}>
                                             {item.title} ({item.type}) -
                                             <a 
                                                 href={item.filePath} 
@@ -163,7 +193,7 @@ export default function AdminCoursesReq() {
                                     ))}
                                 </ul>
                             ) : (
-                                <p>No content available.</p>
+                                <p style={{ marginBottom: 16 }}>No content available.</p>
                             )}
 
                             <Form
@@ -186,7 +216,11 @@ export default function AdminCoursesReq() {
                                     ]}
                                 >
                                     <TextArea 
-                                        rows={4} 
+                                        rows={4}
+                                        style={{ 
+                                            wordBreak: 'break-word',
+                                            whiteSpace: 'pre-wrap'
+                                        }}
                                         placeholder="Explain why this course is being deleted..." 
                                     />
                                 </Form.Item>

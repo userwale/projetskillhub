@@ -40,59 +40,47 @@ const AddCourseContent = () => {
 
   const onFinish = async (values) => {
     if (fileList.length === 0) {
-      message.error('Please select a file to upload');
-      return;
+        message.error('Please select a file to upload');
+        return;
     }
-  
+
     const formData = new FormData();
     formData.append('title', values.title);
-    formData.append('type', contentType);
+    formData.append('type', contentType); // Devient doc_type dans le modèle
     formData.append('file', fileList[0].originFileObj);
-  
+
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-  
-      const response = await fetch(`http://localhost:3000/api/instructor/courses/${courseId}/add-content`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-          // Ne pas mettre 'Content-Type' pour FormData, le navigateur le fera automatiquement
-        },
-        body: formData,
-        credentials: 'include' // Important pour les cookies de session si vous en utilisez
-      });
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        try {
-          const errorData = JSON.parse(errorText);
-          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-        } catch {
-          throw new Error(errorText || `HTTP error! status: ${response.status}`);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:8072/api/instructor/courses/${courseId}/add-content`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to add content');
         }
-      }
-  
-      const data = await response.json();
-      
-      const newContent = {
-        id: existingContent.length + 1,
-        title: values.title,
-        type: contentType,
-        date: new Date().toISOString().split('T')[0],
-        file: data.content.fileUrl
-      };
-      
-      setExistingContent([...existingContent, newContent]);
-      setFileList([]);
-      message.success('Content added successfully!');
+
+        // Mise à jour de l'état avec la nouvelle structure
+        setExistingContent([...existingContent, {
+            id: existingContent.length + 1,
+            title: values.title,
+            doc_type: contentType,
+            url: data.content.url,
+            date: new Date().toISOString().split('T')[0]
+        }]);
+
+        setFileList([]);
+        message.success('Content added successfully!');
     } catch (error) {
-      console.error('Error adding content:', error);
-      message.error(error.message || 'Failed to add content');
+        console.error('Error adding content:', error);
+        message.error(error.message || 'Failed to add content');
     }
-  };
+};
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>

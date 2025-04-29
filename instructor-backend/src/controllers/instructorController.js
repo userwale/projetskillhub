@@ -140,59 +140,67 @@ exports.addNewCourse = async (req, res) => {
 
 exports.addCourseContent = async (req, res) => {
     try {
-        const { courseId } = req.params;
-        const { title, type } = req.body;
-        const file = req.file;
-
-        if (!file) {
-            return res.status(400).json({
-                success: false,
-                message: 'No file uploaded'
-            });
-        }
-
-        // Validate course exists (pseudo-code)
-        const course = await Course.findById(courseId);
-        if (!course) {
-            return res.status(404).json({
-                success: false,
-                message: 'Course not found'
-            });
-        }
-
-        // Save to database (example)
-        const newContent = new CourseContent({
-            courseId,
-            title,
-            type,
-            filePath: `/uploads/${file.filename}`,
-            instructorId: req.user.id,
-            createdAt: new Date()
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No file uploaded'
         });
-
-        await newContent.save();
-
-        res.status(201).json({
-            success: true,
-            message: 'Content added successfully',
-            content: {
-                id: newContent._id,
-                title: newContent.title,
-                type: newContent.type,
-                fileUrl: newContent.filePath
-            }
+      }
+  
+      const { courseId } = req.params;
+      const { title, type } = req.body;
+      
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course not found'
         });
-
+      }
+  
+      // Vérification de l'instructeur
+      if (course.instructor.toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: 'Unauthorized'
+        });
+      }
+  
+      // Création du chemin relatif
+      const filePath = req.file.path.replace(/\\/g, '/').split('uploads/')[1];
+      const url = `/uploads/${filePath}`;
+  
+      const newContent = {
+        title,
+        doc_type: type,
+        url,
+        completed: false
+      };
+  
+      course.content.push(newContent);
+      await course.save();
+  
+      res.status(201).json({
+        success: true,
+        message: 'Content added successfully',
+        content: newContent
+      });
+  
     } catch (error) {
-        console.error('Error adding content:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error',
-            error: error.message
-        });
+      console.error('Error:', error);
+      
+      // Supprimer le fichier uploadé en cas d'erreur
+      if (req.file) {
+        fs.unlink(req.file.path, () => {});
+      }
+  
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
     }
-};
-
+  };
 exports.getAllCoursesByInstructorId = async (req, res) => {
     try {
         // Option 1: Get courses directly from Course collection
@@ -226,19 +234,6 @@ exports.getAllCourses = async (req, res) => {
     try {
         const courses = await Course.find().populate('instructor', 'name email title');
         res.status(200).json(courses);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-
-exports.deleteCourse = async (req, res) => {
-    try {
-        const deletedCourse = await Course.findByIdAndDelete(req.params.courseId);
-        if (!deletedCourse) {
-            return res.status(404).json({ message: 'Course not found' });
-        }
-        res.status(200).json({ message: 'Course deleted successfully' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal Server Error' });
@@ -290,5 +285,117 @@ exports.createInstructor = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+exports.updateCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const { title, description, category } = req.body;
+        const instructorId = req.user.id;
+
+        // Verify the course belongs to the instructor
+        const course = await Course.findOne({ 
+            _id: courseId, 
+            instructor: instructorId 
+        });
+
+        if (!course) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'Course not found or not authorized' 
+            });
+        }
+
+        // Update course fields
+        course.title = title || course.title;
+        course.description = description || course.description;
+        course.category = category || course.category;
+        course.updatedAt = new Date();
+
+        const updatedCourse = await course.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Course updated successfully',
+            data: updatedCourse
+        });
+    } catch (err) {
+        console.error('Error updating course:', err);
+        res.status(500).json({ 
+            success: false,
+            message: 'Internal Server Error' 
+        });
+    }
+};
+
+exports.deleteCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const instructorId = req.user.id;
+
+        // Verify the course belongs to the instructor
+        const course = await Course.findOne({ 
+            _id: courseId, 
+            instructor: instructorId 
+        });
+
+        if (!course) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'Course not found or not authorized' 
+            });
+        }
+
+        // Delete the course
+        await Course.findByIdAndDelete(courseId);
+
+        // Remove course reference from instructor
+        await Instructor.findByIdAndUpdate(
+            instructorId,
+            { $pull: { courses: courseId } }
+        );
+
+        res.status(200).json({ 
+            success: true,
+            message: 'Course deleted successfully' 
+        });
+    } catch (err) {
+        console.error('Error deleting course:', err);
+        res.status(500).json({ 
+            success: false,
+            message: 'Internal Server Error' 
+        });
+    }
+};
+exports.adminDeleteCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: 'Cours introuvable'
+            });
+        }
+
+        await Course.findByIdAndDelete(courseId);
+
+        // Supprimer la référence dans le modèle Instructor
+        await Instructor.findByIdAndUpdate(course.instructor, {
+            $pull: { courses: courseId }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Course successfully deleted by admin'
+        });
+    } catch (error) {
+        console.error('Error deleting course :', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error while deleting course'
+        });
     }
 };

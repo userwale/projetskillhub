@@ -197,29 +197,20 @@ exports.adminLogin = async (req, res) => {
     }
 };
 
-
 exports.getAllCourses = async (req, res) => {
     try {
-        // Appel à l'API de l'instructeur pour récupérer les cours
+        // Appel à l'API de l'instructeur pour récupérer les cours avec les instructeurs peuplés
         const response = await axios.get('http://localhost:8072/api/instructor/courses', {
             headers: {
                 'Authorization': req.headers.authorization
             }
         });
 
-        // Si la réponse contient les données des cours avec l'instructeur
-        if (response.data && response.data.length > 0) {
-            // Traitement pour ajouter des informations supplémentaires si nécessaire
-            const coursesWithInstructor = response.data.map(course => {
-                return {
-                    ...course,
-                    instructor: course.instructor || {}  // Si l'instructeur n'est pas directement dans la réponse, ajoute une valeur par défaut
-                };
-            });
-
+        // Si la réponse contient les données des cours
+        if (response.data && Array.isArray(response.data)) {
             res.status(200).json({
                 success: true,
-                data: coursesWithInstructor
+                data: response.data
             });
         } else {
             res.status(404).json({
@@ -237,7 +228,6 @@ exports.getAllCourses = async (req, res) => {
         });
     }
 };
-
 
 exports.getAllStudents = async (req, res) => {
     try {
@@ -440,15 +430,26 @@ exports.deleteInstructor = async (req, res) => {
 exports.deleteCourse = async (req, res) => {
     try {
         const { courseId } = req.params;
+        const { reason } = req.body;
 
-        const course = await Course.findByIdAndDelete(courseId);
-
-        if (!course) {
-            return res.status(404).json({
+        if (!reason || reason.trim().length < 10) {
+            return res.status(400).json({
                 success: false,
-                message: 'Course not found'
+                message: 'Please provide a valid reason (min 10 characters)'
             });
         }
+
+        // Call instructor microservice
+        const response = await axios.delete(
+            `http://localhost:8072/api/instructor/admin/courses/${courseId}`,
+            {
+              headers: {
+                'Authorization': req.headers.authorization
+              },
+              data: { reason } // si tu veux transmettre une raison
+            }
+          );
+          
 
         res.status(200).json({
             success: true,
@@ -456,13 +457,14 @@ exports.deleteCourse = async (req, res) => {
         });
     } catch (error) {
         console.error('Error deleting course:', error);
-        res.status(500).json({
+        const status = error.response?.status || 500;
+        const message = error.response?.data?.message || 'Failed to delete course';
+        res.status(status).json({
             success: false,
-            message: 'Failed to delete course'
+            message
         });
     }
 };
-
 exports.deleteLearner = async (req, res) => {
     try {
         const { learnerId } = req.params;

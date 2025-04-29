@@ -37,7 +37,7 @@ router.put('/learner/:learnerId', auth.authenticate, adminController.updateLearn
 
 // ---------- COURSES MANAGEMENT ----------
 router.get('/courses',auth.authenticate, adminController.getAllCourses);
-router.delete('/course/:courseId', auth.authenticate, adminController.deleteCourse);
+router.delete('/courses/:courseId', auth.authenticate, adminController.deleteCourse);
 
 // ---------- INSTRUCTORS MANAGEMENT ----------
 router.get('/instructors',auth.authenticate, adminController.getAllInstructors)

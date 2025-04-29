@@ -25,6 +25,7 @@ import AddCourse from './Instructor/Pages/Courses/AddCourse';
 import CourseDetails from './Instructor/Pages/Courses/CourseDetails';
 import AddCourseContent from './Instructor/Pages/Courses/AddCourseContent';
 import InstructorProfile from "./Instructor/Pages/InstructorProfile";
+import EditCoursePage  from './Instructor/Pages/Courses/EditCoursePage';
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
           <Route path="/instructor/courses/:courseId" element={<CourseDetails />} />
           <Route path="/instructor/courses/:courseId/add-content" element={<AddCourseContent />} />
           <Route path="/instructor/profile" element={<InstructorProfile />} />
+          <Route path="/instructor/courses/:courseId/edit" element={<EditCoursePage />} />
 
           {/* Fallback Route */}
           <Route path="*" element={<Home />} />

@@ -19,6 +19,10 @@ router.get('/courses/:courseId', instructorController.getCourseById);
 router.get('/courses', instructorController.getAllCourses);
 router.delete('/courses/:courseId', auth.authenticate, instructorController.deleteCourse);
 router.post('/courses/:courseId/add-content', auth.authenticate, upload.single('file'), instructorController.addCourseContent);
+router.put('/courses/:courseId', auth.authenticate, instructorController.updateCourse);
+// Suppression de cours par l'administrateur
+router.delete('/admin/courses/:courseId', auth.authenticate, instructorController.adminDeleteCourse);
+
 
 // Admin instructor routes
 router.get('/all', auth.authenticate, instructorController.getAllInstructors);
