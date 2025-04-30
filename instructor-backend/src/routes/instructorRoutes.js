@@ -14,13 +14,13 @@ router.get('/:instructorId/profile', auth.authenticate, instructorController.vie
 router.put('/:instructorId/profile', auth.authenticate, instructorController.updateInstructorProfile);
 
 // Course routes
-router.post('/courses', auth.authenticate, instructorController.addNewCourse);
-router.get('/:instructorId/courses', auth.authenticate, instructorController.getAllCoursesByInstructorId);
 router.get('/courses/:courseId', instructorController.getCourseById);
-router.get('/courses', instructorController.getAllCourses);
+router.put('/courses/:courseId', auth.authenticate, instructorController.updateCourse);
 router.delete('/courses/:courseId', auth.authenticate, instructorController.deleteCourse);
 router.post('/courses/:courseId/add-content', auth.authenticate, upload, instructorController.addCourseContent);
-router.put('/courses/:courseId', auth.authenticate, instructorController.updateCourse);
+router.get('/:instructorId/courses', auth.authenticate, instructorController.getAllCoursesByInstructorId);
+router.post('/courses', auth.authenticate, instructorController.addNewCourse);
+
 // Suppression de cours par l'administrateur
 router.delete('/admin/courses/:courseId', auth.authenticate, instructorController.adminDeleteCourse);
 

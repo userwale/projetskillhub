@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const Learner = require('../models/LearnerModel');
 const { hashPassword, comparePassword, generateToken } = require('../middleware/auth');
-const Enrollment = require('../models/EnrollmentModel');
 const axios = require('axios');
 
 exports.createLearner = async (req, res) => {
@@ -149,76 +148,6 @@ exports.getAllLearners = async (req, res) => {
     }
 }
 
-exports.enrollCourse = async (req, res) => {
-    try {
-        const { learnerId, courseId } = req.body;
-
-        const enrollment = new Enrollment({
-            learnerId,
-            course: courseId,
-        });
-
-        await enrollment.save();
-
-        res.status(200).json({ message: 'Course enrolled successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
-exports.getEnrollmentsByLearnerId = async (req, res) => {
-    try {
-        const { learnerId } = req.params;
-
-        const enrollments = await Enrollment.find({ learnerId });
-
-        res.status(200).json(enrollments);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
-exports.unenrollCourse = async (req, res) => {
-    try {
-        const { courseId } = req.body;
-        const learnerId = req.user.id;
-
-        await Enrollment.deleteOne({ learnerId, course: courseId });
-
-        res.status(200).json({ message: 'Unenrolled successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
-exports.updateProgress = async (req, res) => {
-    try {
-        const { contentId, completed } = req.body;
-        const learnerId = req.user.id;
-
-        let enrollment = await Enrollment.findOne({ learnerId });
-        if (!enrollment) {
-            return res.status(404).json({ message: 'Enrollment not found' });
-        }
-
-        let progress = enrollment.progress.find(item => item.content_id === contentId);
-        if (!progress) {
-            enrollment.progress.push({ content_id: contentId, completed });
-        } else {
-            progress.completed = completed;
-        }
-
-        await enrollment.save();
-
-        res.status(200).json({ message: 'Progress updated successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
 
 exports.deleteLearner = async (req, res) => {
     try {
@@ -233,29 +162,6 @@ exports.deleteLearner = async (req, res) => {
     }
 };
 
-
-exports.getEnrollmentByCourseIdAndLearnerId = async (req, res) => {
-    try {
-        const { courseId, learnerId } = req.params;
-
-        const enrollment = await Enrollment.findOne({
-            course: courseId,
-            learnerId: learnerId,
-        });
-
-        if (!enrollment) {
-            return res.status(404).json({ message: "Enrollment not found" });
-        }
-
-        const progressCount = enrollment.progress.length;
-
-        console.log("Count" + progressCount);
-        res.status(200).json({ enrollment, progressCount });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
 exports.updateLearnerByAdmin = async (req, res) => {
     try {
         const { learnerId } = req.params;

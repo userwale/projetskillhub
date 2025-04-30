@@ -12,7 +12,6 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import LearnerProfile from "../Components/LearnerProfile";
-import LearnerMyCourses from "../Components/LearnerMyCourses";
 import LearnerAllCourses from "../Components/LearnerAllCourses";
 
 const { Header, Sider, Content } = Layout;
@@ -56,10 +55,7 @@ const LearnerHome = ({ collapsed, onCollapse, onSelectMenuItem }) => {
         <Menu.Item key="1" icon={<BookOutlined style={iconStyle} />}>
           All Courses
         </Menu.Item>
-        <Menu.Item key="2" icon={<HomeOutlined style={iconStyle} />}>
-          My Courses
-        </Menu.Item>
-        <Menu.Item key="3" icon={<UserOutlined style={iconStyle} />}>
+        <Menu.Item key="2" icon={<UserOutlined style={iconStyle} />}>
           Profile
         </Menu.Item>
 
@@ -181,8 +177,7 @@ const App = () => {
           }}
         >
           {selectedMenuItem === "1" && <LearnerAllCourses />}
-          {selectedMenuItem === "2" && <LearnerMyCourses />}
-          {selectedMenuItem === "3" && <LearnerProfile />}
+          {selectedMenuItem === "2" && <LearnerProfile />}
         </Content>
       </Layout>
     </Layout>
